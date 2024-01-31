@@ -1,3 +1,0 @@
-group "Libraries"
-
-include "glfw"

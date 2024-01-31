@@ -1,2 +1,0 @@
-group "Applications"
-include "Editor"
