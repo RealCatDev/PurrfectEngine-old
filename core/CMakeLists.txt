@@ -1,0 +1,5 @@
+file(GLOB_RECURSE CORE_SOURCES "src/**.cpp")
+add_library(core STATIC ${CORE_SOURCES})
+target_include_directories(core PUBLIC "include/")
+target_include_directories(core PUBLIC ${GLFW_INCLUDE_DIRS})
+target_link_libraries(core glfw)
