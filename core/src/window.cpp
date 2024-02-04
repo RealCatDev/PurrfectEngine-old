@@ -1,12 +1,51 @@
 #include "PurrfectEngine/window.hpp"
 
+#include <stb_image.h>
+
 namespace PurrfectEngine {
 
-  window::window(const char *title, int width, int height)
-  {
-    PURR_ASSERT(glfwInit());
+  cursor::cursor():
+    mCursor(NULL) 
+  {}
 
-    PURR_ASSERT(glfwVulkanSupported());
+  cursor::cursor(const char *filename):
+    mCursor(NULL)
+  { load(filename); }
+
+  cursor::~cursor() {
+    glfwDestroyCursor(mCursor);
+  }
+
+  void cursor::load(const char *filename) {
+    int width = 0, height = 0, channels = 0;
+    stbi_uc *pixels = stbi_load(filename, &width, &height, &channels, STBI_grey_alpha);
+    if (!pixels) {
+      throw std::runtime_error("Failed to load cursor: \"" + std::string(filename) + "\" not found!");
+    }
+
+    GLFWimage image{};
+    image.width = width;
+    image.height = height;
+    image.pixels = pixels;
+
+    GLFWcursor* cursor = glfwCreateCursor(&image, 0, 0);
+    if (!cursor) {
+      throw std::runtime_error("Failed to create cursor from image: " + std::string(filename));
+    }
+
+    stbi_image_free(pixels);
+  }
+
+  void cursor::set(GLFWwindow *window) {
+    glfwSetCursor(window, mCursor);
+  }
+
+  window::window(const char *title, int width, int height):
+    mWindow(NULL)
+  {
+    if(!glfwInit()) throw std::runtime_error("Failed to initialize GLFW!");
+
+    if(!glfwVulkanSupported()) throw std::runtime_error("Failed to initialize GLFW: Vulkan is not supported!");
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
@@ -26,7 +65,6 @@ namespace PurrfectEngine {
     y -= height / 2;
     setX(x);
     setY(y);
-    free(monitor);
 
     glfwSetWindowUserPointer(mWindow, this);
     glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow *win, int w, int h) {
@@ -75,6 +113,10 @@ namespace PurrfectEngine {
 
   void window::setY(int y) {
     glfwSetWindowPos(mWindow, mState.xPos, mState.yPos = y);
+  }
+
+  void window::setCursor(cursor *cur) {
+    cur->set(mWindow);
   }
 
 }

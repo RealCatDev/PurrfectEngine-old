@@ -1,0 +1,10 @@
+^D:\DEV\PURRTECH\PURRFECTENGINE\BUILD_VS\CMAKEFILES\180BB8E0DF4ACB722FEFDD30DEA6FD0F\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Dev/PurrTech/PurrfectEngine -BD:/Dev/PurrTech/PurrfectEngine/build_vs --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Dev/PurrTech/PurrfectEngine/build_vs/PurrfectEngine.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

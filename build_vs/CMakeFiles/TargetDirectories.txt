@@ -1,0 +1,13 @@
+D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/INSTALL.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/ALL_BUILD.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/ZERO_CHECK.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/CMakeFiles/uninstall.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/CMakeFiles/INSTALL.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/CMakeFiles/ALL_BUILD.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/src/CMakeFiles/glfw.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/src/CMakeFiles/update_mappings.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/deps/glfw/src/CMakeFiles/INSTALL.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/core/CMakeFiles/core.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/core/CMakeFiles/INSTALL.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/engine/CMakeFiles/engine.dir
+D:/Dev/PurrTech/PurrfectEngine/build_vs/engine/CMakeFiles/INSTALL.dir

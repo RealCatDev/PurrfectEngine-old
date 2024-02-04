@@ -1,0 +1,407 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      The system is: Windows - 10.0.22631 - AMD64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      MSBuild version 17.8.5+b5265ef37 for .NET Framework
+      Build started 2/1/2024 3:12:38 PM.
+      
+      Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdC\\CompilerIdC.vcxproj" on node 1 (default targets).
+      PrepareForBuild:
+        Creating directory "Debug\\".
+        Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+        Creating directory "Debug\\CompilerIdC.tlog\\".
+      InitializeBuildStatus:
+        Creating "Debug\\CompilerIdC.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        Touching "Debug\\CompilerIdC.tlog\\unsuccessfulbuild".
+      ClCompile:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc143.pdb" /external:W0 /Gd /TC /FC /errorReport:queue CMakeCCompilerId.c
+        CMakeCCompilerId.c
+      Link:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdC.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdC.lib" /MACHINE:X64 Debug\\CMakeCCompilerId.obj
+        CompilerIdC.vcxproj -> D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdC\\CompilerIdC.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_C_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_C_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        Deleting file "Debug\\CompilerIdC.tlog\\unsuccessfulbuild".
+        Touching "Debug\\CompilerIdC.tlog\\CompilerIdC.lastbuildstate".
+      Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdC\\CompilerIdC.vcxproj" (default targets).
+      
+      Build succeeded.
+          0 Warning(s)
+          0 Error(s)
+      
+      Time Elapsed 00:00:01.57
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.exe"
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CompilerIdC.vcxproj"
+      
+      The C compiler identification is MSVC, found in:
+        D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/3.28.0-rc4/CompilerIdC/CompilerIdC.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      MSBuild version 17.8.5+b5265ef37 for .NET Framework
+      Build started 2/1/2024 3:12:40 PM.
+      
+      Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdCXX\\CompilerIdCXX.vcxproj" on node 1 (default targets).
+      PrepareForBuild:
+        Creating directory "Debug\\".
+        Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+        Creating directory "Debug\\CompilerIdCXX.tlog\\".
+      InitializeBuildStatus:
+        Creating "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        Touching "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+      ClCompile:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /nologo /W0 /WX- /diagnostics:column /Od /D _MBCS /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\\\" /Fd"Debug\\vc143.pdb" /external:W0 /Gd /TP /FC /errorReport:queue CMakeCXXCompilerId.cpp
+        CMakeCXXCompilerId.cpp
+      Link:
+        C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:".\\CompilerIdCXX.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:".\\CompilerIdCXX.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:".\\CompilerIdCXX.lib" /MACHINE:X64 Debug\\CMakeCXXCompilerId.obj
+        CompilerIdCXX.vcxproj -> D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdCXX\\CompilerIdCXX.exe
+      PostBuildEvent:
+        for %%i in (cl.exe) do @echo CMAKE_CXX_COMPILER=%%~$PATH:i
+        :VCEnd
+        CMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\Hostx64\\x64\\cl.exe
+      FinalizeBuildStatus:
+        Deleting file "Debug\\CompilerIdCXX.tlog\\unsuccessfulbuild".
+        Touching "Debug\\CompilerIdCXX.tlog\\CompilerIdCXX.lastbuildstate".
+      Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\3.28.0-rc4\\CompilerIdCXX\\CompilerIdCXX.vcxproj" (default targets).
+      
+      Build succeeded.
+          0 Warning(s)
+          0 Error(s)
+      
+      Time Elapsed 00:00:00.63
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.exe"
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CompilerIdCXX.vcxproj"
+      
+      The CXX compiler identification is MSVC, found in:
+        D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/3.28.0-rc4/CompilerIdCXX/CompilerIdCXX.exe
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-p4hxc9"
+      binary: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-p4hxc9"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_C_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-p4hxc9'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_660bf.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.8.5+b5265ef37 for .NET Framework
+        Build started 2/1/2024 3:12:41 PM.
+        
+        Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-p4hxc9\\cmTC_660bf.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_660bf.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-p4hxc9\\Debug\\".
+          Creating directory "cmTC_660bf.dir\\Debug\\cmTC_660bf.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_660bf.dir\\Debug\\cmTC_660bf.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_660bf.dir\\Debug\\cmTC_660bf.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_660bf.dir\\Debug\\\\" /Fd"cmTC_660bf.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.38.33134 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_660bf.dir\\Debug\\\\" /Fd"cmTC_660bf.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
+          CMakeCCompilerABI.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-p4hxc9\\Debug\\cmTC_660bf.exe" /INCREMENTAL /ILK:"cmTC_660bf.dir\\Debug\\cmTC_660bf.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-p4hxc9/Debug/cmTC_660bf.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-p4hxc9/Debug/cmTC_660bf.lib" /MACHINE:X64  /machine:x64 cmTC_660bf.dir\\Debug\\CMakeCCompilerABI.obj
+          cmTC_660bf.vcxproj -> D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-p4hxc9\\Debug\\cmTC_660bf.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_660bf.dir\\Debug\\cmTC_660bf.tlog\\unsuccessfulbuild".
+          Touching "cmTC_660bf.dir\\Debug\\cmTC_660bf.tlog\\cmTC_660bf.lastbuildstate".
+        Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-p4hxc9\\cmTC_660bf.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:00.64
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-vkbd52"
+      binary: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-vkbd52"
+    cmakeVariables:
+      CMAKE_CXX_FLAGS: "/DWIN32 /D_WINDOWS /W3 /GR /EHsc"
+      CMAKE_CXX_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-vkbd52'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_fa7d8.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.8.5+b5265ef37 for .NET Framework
+        Build started 2/1/2024 3:12:42 PM.
+        
+        Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-vkbd52\\cmTC_fa7d8.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_fa7d8.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-vkbd52\\Debug\\".
+          Creating directory "cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_fa7d8.dir\\Debug\\\\" /Fd"cmTC_fa7d8.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.38.33134 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /GR /Fo"cmTC_fa7d8.dir\\Debug\\\\" /Fd"cmTC_fa7d8.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TP /errorReport:queue "C:\\Program Files\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
+          CMakeCXXCompilerABI.cpp
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-vkbd52\\Debug\\cmTC_fa7d8.exe" /INCREMENTAL /ILK:"cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-vkbd52/Debug/cmTC_fa7d8.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-vkbd52/Debug/cmTC_fa7d8.lib" /MACHINE:X64  /machine:x64 cmTC_fa7d8.dir\\Debug\\CMakeCXXCompilerABI.obj
+          cmTC_fa7d8.vcxproj -> D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-vkbd52\\Debug\\cmTC_fa7d8.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.tlog\\unsuccessfulbuild".
+          Touching "cmTC_fa7d8.dir\\Debug\\cmTC_fa7d8.tlog\\cmTC_fa7d8.lastbuildstate".
+        Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-vkbd52\\cmTC_fa7d8.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:00.65
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CheckCSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "deps/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-a9xc7y"
+      binary: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-a9xc7y"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_C_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/Dev/PurrTech/PurrfectEngine/deps/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-a9xc7y'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_91af3.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.8.5+b5265ef37 for .NET Framework
+        Build started 2/1/2024 3:12:43 PM.
+        
+        Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\cmTC_91af3.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_91af3.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\Debug\\".
+          Creating directory "cmTC_91af3.dir\\Debug\\cmTC_91af3.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_91af3.dir\\Debug\\cmTC_91af3.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_91af3.dir\\Debug\\cmTC_91af3.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_91af3.dir\\Debug\\\\" /Fd"cmTC_91af3.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\src.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.38.33134 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CMAKE_HAVE_LIBC_PTHREAD /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_91af3.dir\\Debug\\\\" /Fd"cmTC_91af3.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\src.c"
+          src.c
+        D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\cmTC_91af3.vcxproj]
+        Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\cmTC_91af3.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\cmTC_91af3.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\src.c(1,10): error C1083: Cannot open include file: 'pthread.h': No such file or directory [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-a9xc7y\\cmTC_91af3.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.45
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:175 (_threads_check_lib)"
+      - "deps/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthreads"
+    directories:
+      source: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-854h8q"
+      binary: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-854h8q"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_C_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/Dev/PurrTech/PurrfectEngine/deps/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREADS_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-854h8q'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_7a630.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.8.5+b5265ef37 for .NET Framework
+        Build started 2/1/2024 3:12:44 PM.
+        
+        Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\cmTC_7a630.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_7a630.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\Debug\\".
+          Creating directory "cmTC_7a630.dir\\Debug\\cmTC_7a630.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_7a630.dir\\Debug\\cmTC_7a630.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_7a630.dir\\Debug\\cmTC_7a630.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_7a630.dir\\Debug\\\\" /Fd"cmTC_7a630.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.38.33134 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_7a630.dir\\Debug\\\\" /Fd"cmTC_7a630.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\Debug\\cmTC_7a630.exe" /INCREMENTAL /ILK:"cmTC_7a630.dir\\Debug\\cmTC_7a630.ilk" /NOLOGO pthreads.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-854h8q/Debug/cmTC_7a630.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-854h8q/Debug/cmTC_7a630.lib" /MACHINE:X64  /machine:x64 cmTC_7a630.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\cmTC_7a630.vcxproj]
+        Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\cmTC_7a630.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\cmTC_7a630.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthreads.lib' [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-854h8q\\cmTC_7a630.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.50
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/CheckLibraryExists.cmake:69 (try_compile)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:112 (CHECK_LIBRARY_EXISTS)"
+      - "C:/Program Files/CMake/share/cmake-3.28/Modules/FindThreads.cmake:176 (_threads_check_lib)"
+      - "deps/glfw/CMakeLists.txt:60 (find_package)"
+    checks:
+      - "Looking for pthread_create in pthread"
+    directories:
+      source: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-kssyp0"
+      binary: "D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-kssyp0"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+      CMAKE_C_FLAGS_DEBUG: "/MDd /Zi /Ob0 /Od /RTC1"
+      CMAKE_EXE_LINKER_FLAGS: "/machine:x64"
+      CMAKE_MODULE_PATH: "D:/Dev/PurrTech/PurrfectEngine/deps/glfw/CMake/modules"
+    buildResult:
+      variable: "CMAKE_HAVE_PTHREAD_CREATE"
+      cached: true
+      stdout: |
+        Change Dir: 'D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-kssyp0'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_0b910.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.8.5+b5265ef37 for .NET Framework
+        Build started 2/1/2024 3:12:45 PM.
+        
+        Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\cmTC_0b910.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_0b910.dir\\Debug\\".
+          Structured output is enabled. The formatting of compiler diagnostics will reflect the error hierarchy. See https://aka.ms/cpp/structured-output for more details.
+          Creating directory "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\Debug\\".
+          Creating directory "cmTC_0b910.dir\\Debug\\cmTC_0b910.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_0b910.dir\\Debug\\cmTC_0b910.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+          Touching "cmTC_0b910.dir\\Debug\\cmTC_0b910.tlog\\unsuccessfulbuild".
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_0b910.dir\\Debug\\\\" /Fd"cmTC_0b910.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\CheckFunctionExists.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.38.33134 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D CHECK_FUNCTION_EXISTS=pthread_create /D "CMAKE_INTDIR=\\"Debug\\"" /Gm- /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_0b910.dir\\Debug\\\\" /Fd"cmTC_0b910.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\CheckFunctionExists.c"
+          CheckFunctionExists.c
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.38.33130\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\Debug\\cmTC_0b910.exe" /INCREMENTAL /ILK:"cmTC_0b910.dir\\Debug\\cmTC_0b910.ilk" /NOLOGO pthread.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-kssyp0/Debug/cmTC_0b910.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:/Dev/PurrTech/PurrfectEngine/build_vs/CMakeFiles/CMakeScratch/TryCompile-kssyp0/Debug/cmTC_0b910.lib" /MACHINE:X64  /machine:x64 cmTC_0b910.dir\\Debug\\CheckFunctionExists.obj
+        LINK : fatal error LNK1104: cannot open file 'pthread.lib' [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\cmTC_0b910.vcxproj]
+        Done Building Project "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\cmTC_0b910.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\cmTC_0b910.vcxproj" (default target) (1) ->
+        (Link target) -> 
+          LINK : fatal error LNK1104: cannot open file 'pthread.lib' [D:\\Dev\\PurrTech\\PurrfectEngine\\build_vs\\CMakeFiles\\CMakeScratch\\TryCompile-kssyp0\\cmTC_0b910.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:00.48
+        
+      exitCode: 1
+...
