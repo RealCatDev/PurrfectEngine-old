@@ -364,12 +364,112 @@ namespace PurrfectEngine {
     return buffers;
   }
 
+  VkCommandBuffer vkCommandPool::allocate() {
+    PURR_ASSERT(mPool);
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = mPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer buffer;
+    CHECK_VK(vkAllocateCommandBuffers(mRenderer->mDevice, &allocInfo, &buffer));
+    return buffer;
+  }
+
   void vkCommandPool::initialize() {
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = mRenderer->mQueueFamily.graphicsFamily.value();
     CHECK_VK(vkCreateCommandPool(mRenderer->mDevice, &poolInfo, nullptr, &mPool));
+  }
+
+  VkCommandBuffer vkCommandPool::beginSingleTimeCommands() {
+    VkCommandBuffer commandBuffer = allocate();
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    return commandBuffer;
+  }
+
+  void vkCommandPool::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(mRenderer->mGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(mRenderer->mGraphicsQueue);
+
+    vkFreeCommandBuffers(mRenderer->mDevice, mPool, 1, &commandBuffer);
+  }
+
+  void vkCommandPool::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+    endSingleTimeCommands(commandBuffer);
+  }
+
+  vkBuffer::vkBuffer(vkRenderer* renderer):
+    mRenderer(renderer)
+  {}
+
+  vkBuffer::~vkBuffer() {
+    cleanup();
+  }
+
+  void vkBuffer::initialize(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+    mInitialized = true;
+    mSize = size;
+    mRenderer->CreateBuffer(size, usage, properties, mBuffer, mMemory);
+  }
+
+  void vkBuffer::cleanup() {
+    PURR_ASSERT(mInitialized, "Buffer was not initialized! Did you forgot to call vkBuffer::initialize(VkDeviceSize)?");
+    mInitialized = false;
+    mMapped = false;
+    vkDestroyBuffer(mRenderer->mDevice, mBuffer, nullptr);
+    vkFreeMemory(mRenderer->mDevice, mMemory, nullptr);  
+  }
+
+  void vkBuffer::mapMemory() {
+    PURR_ASSERT(!mMapped, "Buffer was already mapped!");
+
+    vkMapMemory(mRenderer->mDevice, mMemory, 0, mSize, 0, &mData);
+  }
+
+  void vkBuffer::setData(void *data) {
+    PURR_ASSERT(mMapped, "Buffer was not mapped! Did you forgor to call vkBuffer::unmapMemory()?");
+
+    memcpy(mData, data, (size_t)mSize);
+  }
+
+  void vkBuffer::unmapMemory() {
+    PURR_ASSERT(mMapped, "Buffer was not mapped! Did you forgor to call vkBuffer::unmapMemory()?");
+
+    vkUnmapMemory(mRenderer->mDevice, mMemory);
+  }
+
+  void vkBuffer::copy(vkCommandPool *pool, vkBuffer *src) {
+    PURR_ASSERT(mSize == src->mSize, "vkBuffer::copy(vkCommandPool*, vkBuffer*), sizes are not the same!");
+    VkCommandBuffer commandBuffer = pool->beginSingleTimeCommands();
+
+    VkBufferCopy copyRegion{};
+    copyRegion.size = src->mSize;
+    vkCmdCopyBuffer(commandBuffer, src->mBuffer, mBuffer, 1, &copyRegion);
+    pool->endSingleTimeCommands(commandBuffer);
   }
 
   vkRenderer::vkRenderer(window *win):
@@ -507,6 +607,39 @@ namespace PurrfectEngine {
     VkImageView imageView;
     CHECK_VK(vkCreateImageView(mDevice, &viewInfo, nullptr, &imageView));
     return imageView;
+  }
+
+  uint32_t vkRenderer::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(mPhysicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+      if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) return i;
+
+    PURR_ASSERT("Failed to find suitable memory type!");
+    return 0;
+  }
+
+  void vkRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    CHECK_VK(vkCreateBuffer(mDevice, &bufferInfo, nullptr, &buffer));
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(mDevice, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+    CHECK_VK(vkAllocateMemory(mDevice, &allocInfo, nullptr, &bufferMemory));
+
+    vkBindBufferMemory(mDevice, buffer, bufferMemory, 0);
   }
 
   void vkRenderer::InitInstance() {

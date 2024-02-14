@@ -26,8 +26,8 @@ namespace PurrfectEngine {
       mView = glm::lookAt(mTransform->getPosition(), mTransform->getPosition() + mTransform->getForward(), glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    glm::mat4 getProjection() const { return mProj;   }
-    glm::mat4 getView()       const { return mView;   }
+    glm::mat4 getProjection() const { return mProj; }
+    glm::mat4 getView()       const { return mView; }
   private:
     float mFOV = 45.0f, mNearPlane = 0.1f, mFarPlane = 100.0f;
     glm::mat4 mProj, mView;

@@ -4,6 +4,7 @@
 #include "PurrfectEngine/core.hpp"
 #include "PurrfectEngine/utils.hpp"
 #include "PurrfectEngine/window.hpp"
+#include "PurrfectEngine/mesh.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -155,12 +156,42 @@ namespace PurrfectEngine {
     ~vkCommandPool();
 
     std::vector<VkCommandBuffer> allocate(uint32_t count);
+    VkCommandBuffer              allocate();
 
     void initialize();
+
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
   private:
     vkRenderer *mRenderer = nullptr;
   private:
     VkCommandPool mPool;
+  };
+
+  class vkBuffer {
+  public:
+    vkBuffer(vkRenderer* renderer);
+    ~vkBuffer();
+
+    void initialize(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+    void cleanup();
+
+    void mapMemory();
+    void setData(void *data);
+    void unmapMemory();
+
+    void copy(vkCommandPool *pool, vkBuffer *src);
+  private:
+    vkRenderer* mRenderer = nullptr;
+  private:
+    VkBuffer       mBuffer;
+    VkDeviceMemory mMemory;
+    VkDeviceSize   mSize;
+    void          *mData;
+  private:
+    bool mInitialized = false;
+    bool mMapped      = false;
   };
 
   class vkRenderer {
@@ -170,6 +201,7 @@ namespace PurrfectEngine {
     friend class vkRenderPass;
     friend class vkFramebuffer;
     friend class vkCommandPool;
+    friend class vkBuffer;
   public:
     vkRenderer(window *win);
     ~vkRenderer();
@@ -186,6 +218,8 @@ namespace PurrfectEngine {
     #endif
     vkSwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
     VkImageView CreateImageView(VkImage image, VkFormat format);
+    uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
   private: // Vulkan related functions
     void InitInstance();
     #ifdef PURR_DEBUG
