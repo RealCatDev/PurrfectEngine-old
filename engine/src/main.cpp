@@ -11,6 +11,7 @@ int main (int argc, char **argv) {
     glfwPollEvents();
     renderer->render();
   }
+  delete renderer;
   delete window;
 
   return 0;

@@ -53,6 +53,8 @@ namespace PurrfectEngine {
     void setY(int y);
     void setCursor(cursor *cur);
 
+    void getSize(int *x, int *y) { glfwGetWindowSize(mWindow, x, y); }
+
     std::vector<const char *> getVkExtensions() {
       uint32_t glfwExtensionCount = 0;
       const char** glfwExtensions;

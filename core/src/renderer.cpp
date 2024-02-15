@@ -140,6 +140,7 @@ namespace PurrfectEngine {
     stageInfo.module = shader->mModule;
     stageInfo.pName = "main";
     mShaderStages.push_back(stageInfo);
+    mShaders.push_back(shader);
   }
 
   void vkPipeline::initialize() {
@@ -243,6 +244,7 @@ namespace PurrfectEngine {
     pipelineInfo.basePipelineIndex = -1;
 
     CHECK_VK(vkCreateGraphicsPipelines(mRenderer->mDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &mPipeline));
+    for (auto shdr : mShaders) delete shdr;
   }
 
   vkShader::vkShader(vkRenderer *renderer):
@@ -491,13 +493,19 @@ namespace PurrfectEngine {
     CreateSyncObjects();
   }
 
-  void vkRenderer::beginDraw() {
+  bool vkRenderer::beginDraw() {
+    PURR_ASSERT(mSizeCb);
     PURR_ASSERT(mSwapChain, "Failed! Swapchain is not present, did you forgor to call `PurrfectEngine::vkSwapchain::attach(PurrfectEngine::vkRenderer*)`?");
 
     vkWaitForFences(mDevice, 1, &mInFlightFences[mFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences  (mDevice, 1, &mInFlightFences[mFrame]);
 
-    vkAcquireNextImageKHR(mDevice, mSwapChain->mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrame], VK_NULL_HANDLE, &mImageIndex);
+    VkResult result = vkAcquireNextImageKHR(mDevice, mSwapChain->mSwapChain, UINT64_MAX, mImageAvailableSemaphores[mFrame], VK_NULL_HANDLE, &mImageIndex);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+      Resize();
+      return false;
+    } else PURR_ASSERT(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR, "Failed to acquire swapchain image!");
+    vkResetFences(mDevice, 1, &mInFlightFences[mFrame]);
+    return true;
   }
 
   void vkRenderer::endDraw(VkCommandBuffer buf) {
@@ -527,7 +535,11 @@ namespace PurrfectEngine {
     presentInfo.pImageIndices = &mImageIndex;
     presentInfo.pResults = nullptr;
 
-    vkQueuePresentKHR(mPresentQueue, &presentInfo);
+    VkResult result = vkQueuePresentKHR(mPresentQueue, &presentInfo);
+    // TODO(CatDev): Maybe add an option for user to set whether they want to resize or not?
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+      Resize();
+    } else PURR_ASSERT(result == VK_SUCCESS, "Failed to present swapchain image!");
 
     mFrame = (++mFrame % 3);
 
@@ -856,6 +868,19 @@ namespace PurrfectEngine {
       CHECK_VK(vkCreateSemaphore(mDevice, &semaphoreInfo, nullptr, &mRenderFinishedSemaphores[i]));
       CHECK_VK(vkCreateFence    (mDevice, &fenceInfo,     nullptr, &mInFlightFences[i]          ));
     }
+  }
+
+  void vkRenderer::Resize() {
+    int w = 0, h = 0;
+    mWindow->getSize(&w, &h);
+    while (w == 0 || h == 0) {
+      mWindow->getSize(&w, &h);
+      glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(mDevice);
+
+    mSizeCb();
   }
 
   void vkRenderer::Cleanup() {

@@ -12,7 +12,7 @@
 
 namespace PurrfectEngine {
 
-  #define CHECK_VK(check) { if((check) != VK_SUCCESS) { fprintf(stderr, "Failec!"); PURR_DEBUGBREAK(); } }
+  #define CHECK_VK(check) { if((check) != VK_SUCCESS) { fprintf(stderr, "Failed '%s'!", PURR_STRINGIFY_MACRO(check)); PURR_DEBUGBREAK(); } }
 
   struct vkQueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -78,6 +78,7 @@ namespace PurrfectEngine {
     vkRenderer   *mRenderer   = nullptr;
     vkRenderPass *mRenderPass = nullptr;
   private:
+    std::vector<vkShader*>                       mShaders{};
     std::vector<VkPipelineShaderStageCreateInfo> mShaderStages{};
 
     VkPipelineLayout mLayout;
@@ -202,15 +203,19 @@ namespace PurrfectEngine {
     friend class vkFramebuffer;
     friend class vkCommandPool;
     friend class vkBuffer;
+
+    using SizeCallbackFn = std::function<void()>;
   public:
     vkRenderer(window *win);
     ~vkRenderer();
     
     void initialize();
-    void beginDraw();
+    bool beginDraw();
     void endDraw(VkCommandBuffer buf);
 
     uint32_t frame() const { return mFrame; }
+
+    void setSizeCallback(SizeCallbackFn cb) { mSizeCb = cb; }
   private: // Utility functions
     bool CheckLayerSupport(std::vector<const char *> layers);
     #ifdef PURR_DEBUG
@@ -230,6 +235,8 @@ namespace PurrfectEngine {
     void PickDevice();
     void CreateDevice();
     void CreateSyncObjects();
+
+    void Resize();
 
     void Cleanup();
   private: // Vulkan variables
@@ -253,6 +260,7 @@ namespace PurrfectEngine {
 
     vkSwapchain *mSwapChain = nullptr;
   private: // Other
+    SizeCallbackFn mSizeCb = nullptr;
     window *mWindow = nullptr;
   };
 

@@ -29,24 +29,24 @@ namespace PurrfectEngine {
 
       mVBuf = new vkBuffer(mRenderer);
       mVBuf->initialize(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-      mVBuf->copyBuffer(pool, staging); 
+      mVBuf->copy(pool, staging); 
 
       delete staging;
     }
 
     {
-      VkDeviceSize bufferSize = sizeof(mInidces[0]) * mInidces.size();
+      VkDeviceSize bufferSize = sizeof(mIndices[0]) * mIndices.size();
 
       vkBuffer *staging = new vkBuffer(mRenderer);
       staging->initialize(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
       staging->mapMemory();
-        staging->setData(mInidces.data());
+        staging->setData(mIndices.data());
       staging->unmapMemory();
 
       mIBuf = new vkBuffer(mRenderer);
       mIBuf->initialize(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-      mIBuf->copyBuffer(pool, staging); 
+      mIBuf->copy(pool, staging); 
 
       delete staging;
     }

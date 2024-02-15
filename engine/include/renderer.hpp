@@ -12,18 +12,13 @@ namespace PurrfectEngine {
     {}
 
     ~renderer() {
+      cleanup();
+
       delete mRenderer;
     }
 
     void initialize() {
       mRenderer->initialize();
-
-      mSwapchain = new vkSwapchain(mRenderer);
-      mSwapchain->chooseSwapSurfaceFormat({ VK_FORMAT_B8G8R8A8_UNORM }, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
-      mSwapchain->chooseSwapPresentMode({ VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR });
-      mSwapchain->chooseSwapExtent(mWindow);
-      mSwapchain->initialize();
-      mSwapchain->attach(mRenderer);
 
       mCommands = new vkCommandPool(mRenderer);
       mCommands->initialize();
@@ -35,14 +30,42 @@ namespace PurrfectEngine {
       mRenderPass->addAttachment(attachment);
       mRenderPass->initialize();
 
-      for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+      mRenderer->setSizeCallback([this](){ Resize(); });
+      CreateSwapchain();
+    }
+
+    void render() {
+      mRenderer->beginDraw();
+      auto cmdBuf = mCommandBuffers[mRenderer->frame()];
+      vkResetCommandBuffer(cmdBuf, 0);
+      RecordCommandBuffer(cmdBuf);
+      mRenderer->endDraw(cmdBuf);
+    }
+
+    void cleanup() {
+      CleanupSwapchain();
+
+      delete mCommands;
+      delete mRenderPass;
+    }
+  private:
+    void CreateSwapchain() {
+      mSwapchain = new vkSwapchain(mRenderer);
+      mSwapchain->chooseSwapSurfaceFormat({ VK_FORMAT_B8G8R8A8_UNORM }, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+      mSwapchain->chooseSwapPresentMode({ VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR });
+      mSwapchain->chooseSwapExtent(mWindow);
+      mSwapchain->initialize();
+      mSwapchain->attach(mRenderer);
+
+      mFramebuffers.resize(MAX_FRAMES_IN_FLIGHT);
+      for (size_t i = 0; i < mFramebuffers.size(); ++i) {
         auto fb = new vkFramebuffer(mRenderer);
         fb->setRenderPass(mRenderPass);
         fb->setExtent(mSwapchain->getExtent());
         fb->addAttachment(mSwapchain->getView(i));
         fb->initialize();
 
-        mFramebuffers.push_back(fb);
+        mFramebuffers[i] = fb;
       }
 
       mPipeline = new vkPipeline(mRenderer);
@@ -56,15 +79,18 @@ namespace PurrfectEngine {
       mPipeline->initialize();
     }
 
-    void render() {
-      mRenderer->beginDraw();
-      auto cmdBuf = mCommandBuffers[mRenderer->frame()];
-      vkResetCommandBuffer(cmdBuf, 0);
-      recordCommandBuffer(cmdBuf);
-      mRenderer->endDraw(cmdBuf);
+    void CleanupSwapchain() {
+      for (size_t i = 0; i < mFramebuffers.size(); ++i) delete mFramebuffers[i];
+      delete mPipeline;
+      delete mSwapchain;
     }
-  private:
-    void recordCommandBuffer(VkCommandBuffer cmdBuf) {
+
+    void Resize() {
+      CleanupSwapchain();
+      CreateSwapchain();
+    }
+
+    void RecordCommandBuffer(VkCommandBuffer cmdBuf) {
       VkCommandBufferBeginInfo beginInfo{};
       beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
