@@ -218,8 +218,12 @@ namespace PurrfectEngine {
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
-    pipelineLayoutInfo.pSetLayouts = nullptr;
+
+    std::vector<VkDescriptorSetLayout> layouts{};
+    for (auto dsc : mDescriptors) layouts.push_back(dsc->get()); 
+    
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
     pipelineLayoutInfo.pushConstantRangeCount = 0;
     pipelineLayoutInfo.pPushConstantRanges = nullptr;
   
@@ -472,6 +476,95 @@ namespace PurrfectEngine {
     copyRegion.size = src->mSize;
     vkCmdCopyBuffer(commandBuffer, src->mBuffer, mBuffer, 1, &copyRegion);
     pool->endSingleTimeCommands(commandBuffer);
+  }
+
+  vkDescriptorLayout::vkDescriptorLayout(vkRenderer *renderer):
+    mRenderer(renderer)
+  {}
+
+  vkDescriptorLayout::~vkDescriptorLayout() {
+    cleanup();
+  }
+
+  void vkDescriptorLayout::initialize() {
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(mBindings.size());
+    layoutInfo.pBindings = mBindings.data();
+
+    CHECK_VK(vkCreateDescriptorSetLayout(mRenderer->mDevice, &layoutInfo, nullptr, &mLayout));
+  }
+
+  void vkDescriptorLayout::cleanup() {
+    vkDestroyDescriptorSetLayout(mRenderer->mDevice, mLayout, nullptr);
+  }
+
+  vkDescriptorSet::vkDescriptorSet(vkRenderer *renderer, VkDescriptorSet set):
+    mRenderer(renderer), mSet(set)
+  {}
+
+  vkDescriptorSet::~vkDescriptorSet() {}
+
+  void vkDescriptorSet::write(vkBuffer *buffer, uint32_t binding) {
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = buffer->mBuffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = buffer->mSize;
+
+    VkWriteDescriptorSet descriptorWrite{};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = mSet;
+    descriptorWrite.dstBinding = binding;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // TODO(CatDev): Fix
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
+    descriptorWrite.pImageInfo = nullptr;
+    descriptorWrite.pTexelBufferView = nullptr; 
+
+    vkUpdateDescriptorSets(mRenderer->mDevice, 1, &descriptorWrite, 0, nullptr);
+  }
+
+  void vkDescriptorSet::bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set) {
+    vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->mLayout, set, 1, &mSet, 0, nullptr);
+  }
+
+  vkDescriptorPool::vkDescriptorPool(vkRenderer *renderer):
+    mRenderer(renderer)
+  {}
+
+  vkDescriptorPool::~vkDescriptorPool() {
+    cleanup();
+  }
+
+  vkDescriptorSet *vkDescriptorPool::allocate(vkDescriptorLayout *layout) {
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = mPool;
+    allocInfo.descriptorSetCount = 1;
+    auto setLayout = layout->get();
+    allocInfo.pSetLayouts = &setLayout;
+
+    VkDescriptorSet dscSet;
+    CHECK_VK(vkAllocateDescriptorSets(mRenderer->mDevice, &allocInfo, &dscSet));
+
+    return new vkDescriptorSet(mRenderer, dscSet);
+  }
+
+  void vkDescriptorPool::initialize(std::vector<VkDescriptorPoolSize> sizes) {
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(sizes.size());
+    poolInfo.pPoolSizes = sizes.data();
+    uint32_t maxSets = 0;
+    for (auto size : sizes) maxSets += size.descriptorCount;
+    poolInfo.maxSets = maxSets;
+
+    CHECK_VK(vkCreateDescriptorPool(mRenderer->mDevice, &poolInfo, nullptr, &mPool));
+  }
+
+  void vkDescriptorPool::cleanup() {
+    vkDestroyDescriptorPool(mRenderer->mDevice, mPool, nullptr);
   }
 
   vkRenderer::vkRenderer(window *win):

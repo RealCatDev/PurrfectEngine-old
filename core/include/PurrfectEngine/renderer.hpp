@@ -61,8 +61,10 @@ namespace PurrfectEngine {
 
   class vkShader;
   class vkRenderPass;
+  class vkDescriptorLayout;
   class vkPipeline {
     friend class vkRenderer;
+    friend class vkDescriptorSet;
   public:
     vkPipeline(vkRenderer *renderer);
     ~vkPipeline();
@@ -70,6 +72,7 @@ namespace PurrfectEngine {
     void setVertexAttrs(std::vector<VkVertexInputAttributeDescription> x) { mVertexAttributeDescs = x; }
     void setVertexBind(VkVertexInputBindingDescription x) { mVertexBindingDescription = &x; }
     void addShader(VkShaderStageFlagBits stage, vkShader *shader);
+    void addDescriptor(vkDescriptorLayout *layout) { mDescriptors.push_back(layout); }
 
     void setRenderPass(vkRenderPass *renderPass) { mRenderPass = renderPass; }
 
@@ -80,11 +83,13 @@ namespace PurrfectEngine {
     vkRenderer   *mRenderer   = nullptr;
     vkRenderPass *mRenderPass = nullptr;
   private:
-    std::vector<vkShader*>                       mShaders{};
-    std::vector<VkPipelineShaderStageCreateInfo> mShaderStages{};
+    std::vector<vkShader*>                         mShaders{};
+    std::vector<VkPipelineShaderStageCreateInfo>   mShaderStages{};
 
     std::vector<VkVertexInputAttributeDescription> mVertexAttributeDescs{};
     VkVertexInputBindingDescription               *mVertexBindingDescription = nullptr;
+
+    std::vector<vkDescriptorLayout*>               mDescriptors{};
 
     VkPipelineLayout mLayout;
     VkPipeline       mPipeline;
@@ -176,6 +181,7 @@ namespace PurrfectEngine {
   };
 
   class vkBuffer {
+    friend class vkDescriptorSet;
   public:
     vkBuffer(vkRenderer* renderer);
     ~vkBuffer();
@@ -202,6 +208,55 @@ namespace PurrfectEngine {
     bool mMapped      = false;
   };
 
+  class vkDescriptorLayout {
+  public:
+    vkDescriptorLayout(vkRenderer *renderer);
+    ~vkDescriptorLayout();
+
+    void addBinding(VkDescriptorSetLayoutBinding binding) { mBindings.push_back(binding); }
+
+    void initialize();
+    void cleanup();
+
+    VkDescriptorSetLayout get() const { return mLayout; }
+  private:
+    vkRenderer *mRenderer = nullptr;
+  private:
+    std::vector<VkDescriptorSetLayoutBinding> mBindings{};
+
+    VkDescriptorSetLayout mLayout;
+  };
+
+  class vkDescriptorSet {
+    friend class vkDescriptorPool;
+  public:
+    ~vkDescriptorSet();
+
+    void write(vkBuffer *buffer, uint32_t binding = 0);
+    void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 0);
+  private:
+    vkDescriptorSet(vkRenderer *renderer, VkDescriptorSet set);
+
+    vkRenderer *mRenderer = nullptr;
+  private:
+    VkDescriptorSet mSet;
+  };
+
+  class vkDescriptorPool {
+  public:
+    vkDescriptorPool(vkRenderer *renderer);
+    ~vkDescriptorPool();
+
+    vkDescriptorSet *allocate(vkDescriptorLayout *layout);
+
+    void initialize(std::vector<VkDescriptorPoolSize> sizes);
+    void cleanup();
+  private:
+    vkRenderer *mRenderer = nullptr;
+  private:
+    VkDescriptorPool mPool;
+  };
+
   class vkRenderer {
     friend class vkSwapchain;
     friend class vkPipeline;
@@ -210,6 +265,9 @@ namespace PurrfectEngine {
     friend class vkFramebuffer;
     friend class vkCommandPool;
     friend class vkBuffer;
+    friend class vkDescriptorLayout;
+    friend class vkDescriptorSet;
+    friend class vkDescriptorPool;
 
     using SizeCallbackFn = std::function<void()>;
   public:

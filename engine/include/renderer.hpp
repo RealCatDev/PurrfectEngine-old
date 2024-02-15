@@ -2,6 +2,7 @@
 #define PURRENGINE_EDITOR_RENDERER_HPP_
 
 #include <PurrfectEngine/renderer.hpp>
+#include <PurrfectEngine/camera.hpp>
 
 namespace PurrfectEngine {
 
@@ -20,9 +21,21 @@ namespace PurrfectEngine {
     void initialize() {
       mRenderer->initialize();
 
+      mCameraLayout = new vkDescriptorLayout(mRenderer);
+      mCameraLayout->addBinding({
+        0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+      });
+      mCameraLayout->initialize();
+
       mCommands = new vkCommandPool(mRenderer);
       mCommands->initialize();
       mCommandBuffers = mCommands->allocate(MAX_FRAMES_IN_FLIGHT);
+
+      mDescriptors = new vkDescriptorPool(mRenderer);
+      mDescriptors->initialize({
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
+      });
+      mCameraSet = mDescriptors->allocate(mCameraLayout);
 
       mRenderPass = new vkRenderPass(mRenderer);
       auto attachment = vkRenderPass::attachmnetInfo();
@@ -31,6 +44,13 @@ namespace PurrfectEngine {
       mRenderPass->initialize();
 
       mRenderer->setSizeCallback([this](){ Resize(); });
+
+      mCameraBuf = new vkBuffer(mRenderer);
+      mCameraBuf->initialize(sizeof(CameraUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      mCameraBuf->mapMemory();
+
+      mCameraSet->write(mCameraBuf);
+
       CreateSwapchain();
 
       mMesh = new vkMesh(mRenderer,
@@ -45,24 +65,44 @@ namespace PurrfectEngine {
         }
       );
       mMesh->initialize(mCommands);
+
+      mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
     }
 
     void render() {
-      mRenderer->beginDraw();
-      auto cmdBuf = mCommandBuffers[mRenderer->frame()];
-      vkResetCommandBuffer(cmdBuf, 0);
-      RecordCommandBuffer(cmdBuf);
-      mRenderer->endDraw(cmdBuf);
+      if (mRenderer->beginDraw()) {
+        auto cmdBuf = mCommandBuffers[mRenderer->frame()];
+        vkResetCommandBuffer(cmdBuf, 0);
+        Update();
+        RecordCommandBuffer(cmdBuf);
+        mRenderer->endDraw(cmdBuf);
+      }
     }
 
     void cleanup() {
       CleanupSwapchain();
   
+      delete mCameraLayout;
+      delete mCameraBuf;
       delete mMesh;
       delete mCommands;
+      delete mDescriptors;
       delete mRenderPass;
     }
   private:
+    void Update() {
+      auto extnt = mSwapchain->getExtent();
+      mCamera->calculate({ extnt.width, extnt.height });
+      // Update CameraUBO
+      {
+        CameraUBO ubo{};
+        ubo.proj = mCamera->getProjection();
+        ubo.view = mCamera->getView();
+
+        mCameraBuf->setData((void*)&ubo);
+      }
+    }
+
     void CreateSwapchain() {
       mSwapchain = new vkSwapchain(mRenderer);
       mSwapchain->chooseSwapSurfaceFormat({ VK_FORMAT_B8G8R8A8_UNORM }, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
@@ -84,8 +124,10 @@ namespace PurrfectEngine {
 
       mPipeline = new vkPipeline(mRenderer);
       mPipeline->setRenderPass(mRenderPass);
+      mPipeline->addDescriptor(mCameraLayout);
       mPipeline->setVertexBind(MeshVertex::getBindingDescription());
       mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
+
       auto vertBuf = new vkShader(mRenderer);
       auto fragBuf = new vkShader(mRenderer);
       vertBuf->load("../assets/shaders/vert.spv");
@@ -141,6 +183,8 @@ namespace PurrfectEngine {
       scissor.extent = mSwapchain->getExtent();
       vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
+      mCameraSet->bind(cmdBuf, mPipeline);
+
       mMesh->render(cmdBuf);
 
       vkCmdEndRenderPass(cmdBuf);
@@ -148,19 +192,29 @@ namespace PurrfectEngine {
       CHECK_VK(vkEndCommandBuffer(cmdBuf));
     }
   private:
-    window        *mWindow = nullptr;
+    window           *mWindow      = nullptr;
 
-    vkRenderer    *mRenderer;
-    vkSwapchain   *mSwapchain;
-    vkCommandPool *mCommands;
+    vkRenderer       *mRenderer    = nullptr;
+    vkSwapchain      *mSwapchain   = nullptr;
+    vkCommandPool    *mCommands    = nullptr;
+    vkDescriptorPool *mDescriptors = nullptr;
 
-    std::vector<vkFramebuffer*> mFramebuffers{};
     vkRenderPass *mRenderPass = nullptr;
-    vkPipeline   *mPipeline   = nullptr;
+
+    vkDescriptorLayout *mCameraLayout = nullptr;
+    // TODO(CatDev): Add for textures/materials
+    //vkDescriptorLayout *mMaterialLayout = nullptr;
 
     std::vector<VkCommandBuffer> mCommandBuffers{};
 
+    std::vector<vkFramebuffer*> mFramebuffers{};
+    vkPipeline   *mPipeline   = nullptr;
+
+    vkBuffer *mCameraBuf = nullptr;
+    vkDescriptorSet *mCameraSet = nullptr;
     vkMesh *mMesh = nullptr;
+
+    purrCamera *mCamera = nullptr;
   };
 
 }
