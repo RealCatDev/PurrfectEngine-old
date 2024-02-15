@@ -24,7 +24,7 @@ namespace PurrfectEngine {
     }
 
     static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions() {
-      std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+      std::vector<VkVertexInputAttributeDescription> attributeDescriptions(4);
 
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;

@@ -32,6 +32,19 @@ namespace PurrfectEngine {
 
       mRenderer->setSizeCallback([this](){ Resize(); });
       CreateSwapchain();
+
+      mMesh = new vkMesh(mRenderer,
+        {
+          {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{ 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }}
+        },
+        {
+          0, 1, 2, 2, 3, 0
+        }
+      );
+      mMesh->initialize(mCommands);
     }
 
     void render() {
@@ -44,7 +57,8 @@ namespace PurrfectEngine {
 
     void cleanup() {
       CleanupSwapchain();
-
+  
+      delete mMesh;
       delete mCommands;
       delete mRenderPass;
     }
@@ -70,6 +84,8 @@ namespace PurrfectEngine {
 
       mPipeline = new vkPipeline(mRenderer);
       mPipeline->setRenderPass(mRenderPass);
+      mPipeline->setVertexBind(MeshVertex::getBindingDescription());
+      mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
       auto vertBuf = new vkShader(mRenderer);
       auto fragBuf = new vkShader(mRenderer);
       vertBuf->load("../assets/shaders/vert.spv");
@@ -125,7 +141,7 @@ namespace PurrfectEngine {
       scissor.extent = mSwapchain->getExtent();
       vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
-      vkCmdDraw(cmdBuf, 3, 1, 0, 0);
+      mMesh->render(cmdBuf);
 
       vkCmdEndRenderPass(cmdBuf);
 
@@ -143,6 +159,8 @@ namespace PurrfectEngine {
     vkPipeline   *mPipeline   = nullptr;
 
     std::vector<VkCommandBuffer> mCommandBuffers{};
+
+    vkMesh *mMesh = nullptr;
   };
 
 }

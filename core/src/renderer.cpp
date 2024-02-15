@@ -158,10 +158,10 @@ namespace PurrfectEngine {
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+    vertexInputInfo.vertexBindingDescriptionCount = mVertexBindingDescription ? 1 : 0;
+    vertexInputInfo.pVertexBindingDescriptions = mVertexBindingDescription;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(mVertexAttributeDescs.size());
+    vertexInputInfo.pVertexAttributeDescriptions = mVertexAttributeDescs.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -448,19 +448,19 @@ namespace PurrfectEngine {
 
   void vkBuffer::mapMemory() {
     PURR_ASSERT(!mMapped, "Buffer was already mapped!");
-
+    mMapped = true;
     vkMapMemory(mRenderer->mDevice, mMemory, 0, mSize, 0, &mData);
   }
 
   void vkBuffer::setData(void *data) {
-    PURR_ASSERT(mMapped, "Buffer was not mapped! Did you forgor to call vkBuffer::unmapMemory()?");
+    PURR_ASSERT(mMapped, "Buffer was not mapped! Did you forgor to call vkBuffer::mapMemory()?");
 
     memcpy(mData, data, (size_t)mSize);
   }
 
   void vkBuffer::unmapMemory() {
     PURR_ASSERT(mMapped, "Buffer was not mapped! Did you forgor to call vkBuffer::unmapMemory()?");
-
+    mMapped = false;
     vkUnmapMemory(mRenderer->mDevice, mMemory);
   }
 

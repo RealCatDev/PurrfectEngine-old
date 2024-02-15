@@ -67,6 +67,8 @@ namespace PurrfectEngine {
     vkPipeline(vkRenderer *renderer);
     ~vkPipeline();
 
+    void setVertexAttrs(std::vector<VkVertexInputAttributeDescription> x) { mVertexAttributeDescs = x; }
+    void setVertexBind(VkVertexInputBindingDescription x) { mVertexBindingDescription = &x; }
     void addShader(VkShaderStageFlagBits stage, vkShader *shader);
 
     void setRenderPass(vkRenderPass *renderPass) { mRenderPass = renderPass; }
@@ -81,8 +83,11 @@ namespace PurrfectEngine {
     std::vector<vkShader*>                       mShaders{};
     std::vector<VkPipelineShaderStageCreateInfo> mShaderStages{};
 
+    std::vector<VkVertexInputAttributeDescription> mVertexAttributeDescs{};
+    VkVertexInputBindingDescription               *mVertexBindingDescription = nullptr;
+
     VkPipelineLayout mLayout;
-    VkPipeline mPipeline;
+    VkPipeline       mPipeline;
   };
 
   class vkShader {
@@ -183,6 +188,8 @@ namespace PurrfectEngine {
     void unmapMemory();
 
     void copy(vkCommandPool *pool, vkBuffer *src);
+
+    VkBuffer get() const { return mBuffer; }
   private:
     vkRenderer* mRenderer = nullptr;
   private:

@@ -58,7 +58,13 @@ namespace PurrfectEngine {
   }
 
   void vkMesh::render(VkCommandBuffer cmdBuf) {
+    VkDeviceSize offsets[] = {0};
+    auto vbuf = mVBuf->get();
+    vkCmdBindVertexBuffers(cmdBuf, 0, 1, &vbuf, offsets);
 
+    vkCmdBindIndexBuffer(cmdBuf, mIBuf->get(), 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdDrawIndexed(cmdBuf, static_cast<uint32_t>(mIndices.size()), 1, 0, 0, 0);
   }
 
 }
