@@ -257,6 +257,8 @@ namespace PurrfectEngine {
 
     void initialize(std::vector<VkDescriptorPoolSize> sizes);
     void cleanup();
+
+    VkDescriptorPool get() const { return mPool; }
   private:
     vkRenderer *mRenderer = nullptr;
   private:
@@ -277,6 +279,8 @@ namespace PurrfectEngine {
 
     friend class vkMesh;
     friend class vkTexture;
+    
+    friend class ImGuiHelper;
 
     using SizeCallbackFn = std::function<void()>;
   public:

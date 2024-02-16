@@ -1,4 +1,5 @@
 #include "PurrfectEngine/renderer.hpp"
+#include "PurrfectEngine/imgui.hpp"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
@@ -180,7 +181,7 @@ namespace PurrfectEngine {
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // TODO(CatDev): Change to VK_FRONT_FACE_COUNTER_CLOCKWISE
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisampling{};
@@ -310,12 +311,22 @@ namespace PurrfectEngine {
     subpass.pColorAttachments = refs.data();
     if (depthRefIdx >= 0) subpass.pDepthStencilAttachment = depthRef;
 
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass    = 0;
+    dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = static_cast<uint32_t>(mAttachmentDescs.size());
     renderPassInfo.pAttachments = mAttachmentDescs.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
+    renderPassInfo.dependencyCount = 1;
+    renderPassInfo.pDependencies = &dependency;
 
     CHECK_VK(vkCreateRenderPass(mRenderer->mDevice, &renderPassInfo, nullptr, &mPass));
   }
@@ -655,6 +666,7 @@ namespace PurrfectEngine {
     uint32_t maxSets = 0;
     for (auto size : sizes) maxSets += size.descriptorCount;
     poolInfo.maxSets = maxSets;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     CHECK_VK(vkCreateDescriptorPool(mRenderer->mDevice, &poolInfo, nullptr, &mPool));
   }
@@ -714,6 +726,8 @@ namespace PurrfectEngine {
     submitInfo.pSignalSemaphores = signalSemaphores;
 
     CHECK_VK(vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, mInFlightFences[mFrame]));
+
+    ImGuiHelper::update();
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

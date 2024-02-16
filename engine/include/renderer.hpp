@@ -3,6 +3,7 @@
 
 #include <PurrfectEngine/renderer.hpp>
 #include <PurrfectEngine/camera.hpp>
+#include <PurrfectEngine/imgui.hpp>
 
 namespace PurrfectEngine {
 
@@ -54,6 +55,14 @@ namespace PurrfectEngine {
 
       CreateSwapchain();
 
+      mImGuiDescriptors = new vkDescriptorPool(mRenderer);
+      mImGuiDescriptors->initialize({
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024 },
+      });
+
+      mImGui = new ImGuiHelper(mRenderer);
+      mImGui->initialize(mWindow, mImGuiDescriptors, mRenderPass);
+
       mMesh = new vkMesh(mRenderer,
         {
           {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
@@ -86,6 +95,8 @@ namespace PurrfectEngine {
     void cleanup() {
       CleanupSwapchain();
   
+      delete mImGui;
+
       delete mCameraLayout;
       destroyTextureLayout(); // destroy texture layout
 
@@ -94,6 +105,7 @@ namespace PurrfectEngine {
       delete mTexture;
       delete mCommands;
       delete mDescriptors;
+      delete mImGuiDescriptors;
       delete mRenderPass;
     }
   private:
@@ -175,8 +187,6 @@ namespace PurrfectEngine {
 
       vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-      vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->get());
-
       VkViewport viewport{};
       viewport.x = 0.0f;
       viewport.y = 0.0f;
@@ -191,10 +201,17 @@ namespace PurrfectEngine {
       scissor.extent = mSwapchain->getExtent();
       vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
+      vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->get());
+
       mCameraSet->bind(cmdBuf, mPipeline);
 
       mTexture->bind(cmdBuf, mPipeline);
       mMesh->render(cmdBuf);
+
+      mImGui->newFrame();
+      static bool sDemoWindow = true;
+      ImGui::ShowDemoWindow(&sDemoWindow);
+      mImGui->render(cmdBuf);
 
       vkCmdEndRenderPass(cmdBuf);
 
@@ -217,7 +234,9 @@ namespace PurrfectEngine {
     std::vector<VkCommandBuffer> mCommandBuffers{};
 
     std::vector<vkFramebuffer*> mFramebuffers{};
-    vkPipeline      *mPipeline   = nullptr;
+    vkPipeline      *mPipeline  = nullptr;
+
+    ImGuiHelper     *mImGui     = nullptr;
 
     vkBuffer        *mCameraBuf = nullptr;
     vkDescriptorSet *mCameraSet = nullptr;
@@ -225,6 +244,8 @@ namespace PurrfectEngine {
     vkTexture       *mTexture   = nullptr;
 
     purrCamera      *mCamera = nullptr;
+
+    vkDescriptorPool *mImGuiDescriptors = nullptr;
   };
 
 }
