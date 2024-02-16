@@ -33,7 +33,8 @@ namespace PurrfectEngine {
 
       mDescriptors = new vkDescriptorPool(mRenderer);
       mDescriptors->initialize({
-        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 }
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2048 }
       });
       mCameraSet = mDescriptors->allocate(mCameraLayout);
 
@@ -55,16 +56,19 @@ namespace PurrfectEngine {
 
       mMesh = new vkMesh(mRenderer,
         {
-          {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{ 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }}
+          {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{ 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{ 0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }},
+          {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }}
         },
         {
           0, 1, 2, 2, 3, 0
         }
       );
       mMesh->initialize(mCommands);
+
+      mTexture = new vkTexture(mRenderer, "../assets/textures/texture.png"); // TODO(CatDev): Create engine assets directory instead of hardcoding it :D <3
+      mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat());
 
       mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
     }
@@ -83,8 +87,11 @@ namespace PurrfectEngine {
       CleanupSwapchain();
   
       delete mCameraLayout;
+      destroyTextureLayout(); // destroy texture layout
+
       delete mCameraBuf;
       delete mMesh;
+      delete mTexture;
       delete mCommands;
       delete mDescriptors;
       delete mRenderPass;
@@ -125,6 +132,7 @@ namespace PurrfectEngine {
       mPipeline = new vkPipeline(mRenderer);
       mPipeline->setRenderPass(mRenderPass);
       mPipeline->addDescriptor(mCameraLayout);
+      mPipeline->addDescriptor(getTextureLayout(mRenderer));
       mPipeline->setVertexBind(MeshVertex::getBindingDescription());
       mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
 
@@ -185,6 +193,7 @@ namespace PurrfectEngine {
 
       mCameraSet->bind(cmdBuf, mPipeline);
 
+      mTexture->bind(cmdBuf, mPipeline);
       mMesh->render(cmdBuf);
 
       vkCmdEndRenderPass(cmdBuf);
@@ -208,13 +217,14 @@ namespace PurrfectEngine {
     std::vector<VkCommandBuffer> mCommandBuffers{};
 
     std::vector<vkFramebuffer*> mFramebuffers{};
-    vkPipeline   *mPipeline   = nullptr;
+    vkPipeline      *mPipeline   = nullptr;
 
-    vkBuffer *mCameraBuf = nullptr;
+    vkBuffer        *mCameraBuf = nullptr;
     vkDescriptorSet *mCameraSet = nullptr;
-    vkMesh *mMesh = nullptr;
+    vkMesh          *mMesh      = nullptr;
+    vkTexture       *mTexture   = nullptr;
 
-    purrCamera *mCamera = nullptr;
+    purrCamera      *mCamera = nullptr;
   };
 
 }

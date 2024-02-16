@@ -16,6 +16,7 @@ layout (location = 2) out vec3 outNrml;
 
 void main() {
   gl_Position = cam.proj * cam.view * vec4(inPos, 1.0);
+  gl_Position.y = -gl_Position.y;
   outColr     = inColr;
   outUV       = inUV;
   outNrml     = inNrml;

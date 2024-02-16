@@ -5,6 +5,7 @@
 #include "PurrfectEngine/utils.hpp"
 #include "PurrfectEngine/window.hpp"
 #include "PurrfectEngine/mesh.hpp"
+#include "PurrfectEngine/texture.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -44,8 +45,9 @@ namespace PurrfectEngine {
     void chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& requestedPresentModes);
     void chooseSwapExtent(window *win);
   public:
-    VkExtent2D getExtent() const { PURR_ASSERT(mExtent.has_value()); return mExtent.value(); }
+    VkExtent2D  getExtent()           const { PURR_ASSERT(mExtent.has_value()); return mExtent.value(); }
     VkImageView getView(uint32_t idx) const { PURR_ASSERT(0 < idx < mImageViews.size()); return mImageViews[idx]; }
+    VkFormat    getFormat()           const { PURR_ASSERT(mFormat.has_value()); return mFormat.value().format; }
   private:
     vkRenderer *mRenderer = nullptr;
   private:
@@ -173,7 +175,10 @@ namespace PurrfectEngine {
 
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void copyBuffer(VkBuffer buffer, VkImage image, int width, int height);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
   private:
     vkRenderer *mRenderer = nullptr;
   private:
@@ -233,6 +238,7 @@ namespace PurrfectEngine {
     ~vkDescriptorSet();
 
     void write(vkBuffer *buffer, uint32_t binding = 0);
+    void write(VkImageLayout layout, VkImageView view, VkSampler sampler, uint32_t binding = 0);
     void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 0);
   private:
     vkDescriptorSet(vkRenderer *renderer, VkDescriptorSet set);
@@ -269,6 +275,9 @@ namespace PurrfectEngine {
     friend class vkDescriptorSet;
     friend class vkDescriptorPool;
 
+    friend class vkMesh;
+    friend class vkTexture;
+
     using SizeCallbackFn = std::function<void()>;
   public:
     vkRenderer(window *win);
@@ -287,9 +296,11 @@ namespace PurrfectEngine {
       void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
     #endif
     vkSwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-    VkImageView CreateImageView(VkImage image, VkFormat format);
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    
     void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
+    void CreateImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView CreateImageView(VkImage image, VkFormat format);
   private: // Vulkan related functions
     void InitInstance();
     #ifdef PURR_DEBUG
