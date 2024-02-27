@@ -8,6 +8,8 @@
 #include "PurrfectEngine/renderer.hpp"
 #include "PurrfectEngine/window.hpp"
 
+#include <ImGuizmo.h>
+
 namespace PurrfectEngine {
 
   class ImGuiHelper {

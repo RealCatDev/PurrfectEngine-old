@@ -240,6 +240,8 @@ namespace PurrfectEngine {
     void write(vkBuffer *buffer, uint32_t binding = 0);
     void write(VkImageLayout layout, VkImageView view, VkSampler sampler, uint32_t binding = 0);
     void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 0);
+
+    VkDescriptorSet get() const { return mSet ? mSet : VK_NULL_HANDLE; }
   private:
     vkDescriptorSet(vkRenderer *renderer, VkDescriptorSet set);
 
@@ -294,6 +296,13 @@ namespace PurrfectEngine {
     uint32_t frame() const { return mFrame; }
 
     void setSizeCallback(SizeCallbackFn cb) { mSizeCb = cb; }
+    void setResizeCheck(SizeCallbackFn cb) { mCheckResize = cb; }
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
+    void createImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkImage image, VkFormat format);
+
+    VkDevice getDevice() const { return mDevice; }
   private: // Utility functions
     bool CheckLayerSupport(std::vector<const char *> layers);
     #ifdef PURR_DEBUG
@@ -301,10 +310,6 @@ namespace PurrfectEngine {
     #endif
     vkSwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-    
-    void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
-    void CreateImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    VkImageView CreateImageView(VkImage image, VkFormat format);
   private: // Vulkan related functions
     void InitInstance();
     #ifdef PURR_DEBUG
@@ -341,6 +346,7 @@ namespace PurrfectEngine {
     vkSwapchain *mSwapChain = nullptr;
   private: // Other
     SizeCallbackFn mSizeCb = nullptr;
+    SizeCallbackFn mCheckResize = nullptr;
     window *mWindow = nullptr;
   };
 

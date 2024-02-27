@@ -29,7 +29,7 @@ namespace PurrfectEngine {
     glm::mat4 getProjection() const { return mProj; }
     glm::mat4 getView()       const { return mView; }
   private:
-    float mFOV = 45.0f, mNearPlane = 0.1f, mFarPlane = 100.0f;
+    float mFOV = 90.0f, mNearPlane = 0.1f, mFarPlane = 100.0f;
     glm::mat4 mProj, mView;
     purrTransform *mTransform = nullptr;
   };

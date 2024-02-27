@@ -5,6 +5,10 @@
 #include <PurrfectEngine/camera.hpp>
 #include <PurrfectEngine/imgui.hpp>
 
+#include <glm/gtc/type_ptr.hpp>
+
+#include "panels.hpp"
+
 namespace PurrfectEngine {
 
   class renderer {
@@ -21,6 +25,8 @@ namespace PurrfectEngine {
 
     void initialize() {
       mRenderer->initialize();
+
+      (void)getTextureLayout(mRenderer);
 
       mCameraLayout = new vkDescriptorLayout(mRenderer);
       mCameraLayout->addBinding({
@@ -45,7 +51,22 @@ namespace PurrfectEngine {
       mRenderPass->addAttachment(attachment);
       mRenderPass->initialize();
 
+      mSceneRenderPass = new vkRenderPass(mRenderer);
+      attachment = vkRenderPass::attachmnetInfo();
+      attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+      attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      mSceneRenderPass->addAttachment(attachment);
+      mSceneRenderPass->initialize();
+
       mRenderer->setSizeCallback([this](){ Resize(); });
+      mRenderer->setResizeCheck([this]() {
+        if (mSceneResized) {
+          if (!mSwapchainResized) vkDeviceWaitIdle(mRenderer->getDevice());
+          ResizeScene();
+          mSceneResized = false;
+        }
+        mSwapchainResized = false;
+      });
 
       mCameraBuf = new vkBuffer(mRenderer);
       mCameraBuf->initialize(sizeof(CameraUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -53,7 +74,9 @@ namespace PurrfectEngine {
 
       mCameraSet->write(mCameraBuf);
 
+      mSceneExtent = { 1920, 1080 };
       CreateSwapchain();
+      CreateScene();
 
       mImGuiDescriptors = new vkDescriptorPool(mRenderer);
       mImGuiDescriptors->initialize({
@@ -94,6 +117,7 @@ namespace PurrfectEngine {
 
     void cleanup() {
       CleanupSwapchain();
+      CleanupScene();
   
       delete mImGui;
 
@@ -107,6 +131,7 @@ namespace PurrfectEngine {
       delete mDescriptors;
       delete mImGuiDescriptors;
       delete mRenderPass;
+      delete mSceneRenderPass;
     }
   private:
     void Update() {
@@ -140,11 +165,39 @@ namespace PurrfectEngine {
 
         mFramebuffers[i] = fb;
       }
+    }
+
+    void CleanupSwapchain() {
+      for (size_t i = 0; i < mFramebuffers.size(); ++i)      delete mFramebuffers[i];
+      delete mSwapchain;
+    }
+
+    void Resize() {
+      CleanupSwapchain();
+      CreateSwapchain();
+      mSwapchainResized = true;
+    }
+
+    void CreateScene() {
+      mSceneImages.clear();
+      mSceneFramebuffers.clear();
+      for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        vkTexture *texture = new vkTexture(mRenderer);
+        texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, mSceneExtent.width, mSceneExtent.height);
+        auto fb = new vkFramebuffer(mRenderer);
+        fb->setRenderPass(mSceneRenderPass);
+        fb->setExtent(mSceneExtent);
+        fb->addAttachment(texture->getView());
+        fb->initialize();
+        
+        mSceneImages.push_back(texture);
+        mSceneFramebuffers.push_back(fb);
+      }
 
       mPipeline = new vkPipeline(mRenderer);
-      mPipeline->setRenderPass(mRenderPass);
+      mPipeline->setRenderPass(mSceneRenderPass);
       mPipeline->addDescriptor(mCameraLayout);
-      mPipeline->addDescriptor(getTextureLayout(mRenderer));
+      mPipeline->addDescriptor(getTextureLayout());
       mPipeline->setVertexBind(MeshVertex::getBindingDescription());
       mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
 
@@ -157,15 +210,15 @@ namespace PurrfectEngine {
       mPipeline->initialize();
     }
 
-    void CleanupSwapchain() {
-      for (size_t i = 0; i < mFramebuffers.size(); ++i) delete mFramebuffers[i];
+    void CleanupScene() {
+      for (size_t i = 0; i < mSceneImages.size(); ++i)       delete mSceneImages[i];
+      for (size_t i = 0; i < mSceneFramebuffers.size(); ++i) delete mSceneFramebuffers[i];
       delete mPipeline;
-      delete mSwapchain;
     }
 
-    void Resize() {
-      CleanupSwapchain();
-      CreateSwapchain();
+    void ResizeScene() {
+      CleanupScene();
+      CreateScene();
     }
 
     void RecordCommandBuffer(VkCommandBuffer cmdBuf) {
@@ -174,48 +227,127 @@ namespace PurrfectEngine {
 
       CHECK_VK(vkBeginCommandBuffer(cmdBuf, &beginInfo));
 
-      VkRenderPassBeginInfo renderPassInfo{};
-      renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-      renderPassInfo.renderPass = mRenderPass->get();
-      renderPassInfo.framebuffer = mFramebuffers[mRenderer->frame()]->get();
-      renderPassInfo.renderArea.offset = {0, 0};
-      renderPassInfo.renderArea.extent = mSwapchain->getExtent();
+      {
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = mSceneRenderPass->get();
+        renderPassInfo.framebuffer = mSceneFramebuffers[mRenderer->frame()]->get();
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = mSceneExtent;
 
-      VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-      renderPassInfo.clearValueCount = 1;
-      renderPassInfo.pClearValues = &clearColor;
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
 
-      vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-      VkViewport viewport{};
-      viewport.x = 0.0f;
-      viewport.y = 0.0f;
-      viewport.width = (float) mSwapchain->getExtent().width;
-      viewport.height = (float) mSwapchain->getExtent().height;
-      viewport.minDepth = 0.0f;
-      viewport.maxDepth = 1.0f;
-      vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float) mSceneExtent.width;
+        viewport.height = (float) mSceneExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
 
-      VkRect2D scissor{};
-      scissor.offset = {0, 0};
-      scissor.extent = mSwapchain->getExtent();
-      vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = mSceneExtent;
+        vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
 
-      vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->get());
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->get());
 
-      mCameraSet->bind(cmdBuf, mPipeline);
+        mCameraSet->bind(cmdBuf, mPipeline);
 
-      mTexture->bind(cmdBuf, mPipeline);
-      mMesh->render(cmdBuf);
+        mTexture->bind(cmdBuf, mPipeline);
+        mMesh->render(cmdBuf);
 
-      mImGui->newFrame();
-      static bool sDemoWindow = true;
-      ImGui::ShowDemoWindow(&sDemoWindow);
-      mImGui->render(cmdBuf);
+        vkCmdEndRenderPass(cmdBuf);
+      }
 
-      vkCmdEndRenderPass(cmdBuf);
+      {
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = mRenderPass->get();
+        renderPassInfo.framebuffer = mFramebuffers[mRenderer->frame()]->get();
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = mSwapchain->getExtent();
+
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        mImGui->newFrame();
+        RenderImGui();
+        mImGui->render(cmdBuf);
+
+        vkCmdEndRenderPass(cmdBuf);
+      }
 
       CHECK_VK(vkEndCommandBuffer(cmdBuf));
+    }
+
+    void RenderImGui() {
+      {
+        bool menuBar = false;
+        static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+
+        ImGuiWindowFlags window_flags = (menuBar ? ImGuiWindowFlags_MenuBar : (ImGuiWindowFlags)0) | ImGuiWindowFlags_NoDocking;
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+        {
+          static bool dockOpen = true;
+          ImGui::Begin("DockSpace Demo", &dockOpen, window_flags);
+        }
+        
+        ImGui::PopStyleVar(3);
+
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+        if (menuBar && ImGui::BeginMenuBar()) {
+          if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Exit", NULL, false)); // TODO(CatDev)
+            ImGui::EndMenu();
+          }
+
+          ImGui::EndMenuBar();
+        }
+      }
+
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+      ImGui::Begin("Scene", &mSceneWndoOpen, ImGuiWindowFlags_NoCollapse);
+
+      auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+      auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+      auto viewportOffset = ImGui::GetWindowPos();
+      mScnViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+      mScnViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
+      auto regAval = ImGui::GetContentRegionAvail();
+      if (glm::vec2(regAval.x, regAval.y) != glm::vec2(mSceneExtent.width, mSceneExtent.height)) {
+        mSceneResized = true;
+        mSceneExtent = { static_cast<uint32_t>(regAval.x), static_cast<uint32_t>(regAval.y) };
+      }
+      ImGui::Image(mSceneImages[mRenderer->frame()]->getSet(), { static_cast<float>(mSceneExtent.width), static_cast<float>(mSceneExtent.height) });
+
+      ImGui::End();
+      ImGui::PopStyleVar();
+
+      HierarchyPanel::Render();
+
+      ImGui::End(); // Dockspace
     }
   private:
     window           *mWindow      = nullptr;
@@ -225,18 +357,27 @@ namespace PurrfectEngine {
     vkCommandPool    *mCommands    = nullptr;
     vkDescriptorPool *mDescriptors = nullptr;
 
-    vkRenderPass *mRenderPass = nullptr;
-
     vkDescriptorLayout *mCameraLayout = nullptr;
-    // TODO(CatDev): Add for textures/materials
-    //vkDescriptorLayout *mMaterialLayout = nullptr;
+
+    vkRenderPass *mRenderPass = nullptr;
+    std::vector<vkFramebuffer*> mFramebuffers{};
+    vkDescriptorPool *mImGuiDescriptors = nullptr;
 
     std::vector<VkCommandBuffer> mCommandBuffers{};
-
-    std::vector<vkFramebuffer*> mFramebuffers{};
-    vkPipeline      *mPipeline  = nullptr;
+    bool                         mSwapchainResized = false;
 
     ImGuiHelper     *mImGui     = nullptr;
+
+    glm::vec2 mScnViewportBounds[2];
+
+    vkRenderPass    *mSceneRenderPass = nullptr;
+    VkExtent2D       mSceneExtent = {};
+    bool             mSceneResized = false;
+
+    std::vector<vkTexture*>     mSceneImages{};
+    std::vector<vkFramebuffer*> mSceneFramebuffers{};
+
+    vkPipeline      *mPipeline  = nullptr;
 
     vkBuffer        *mCameraBuf = nullptr;
     vkDescriptorSet *mCameraSet = nullptr;
@@ -244,8 +385,8 @@ namespace PurrfectEngine {
     vkTexture       *mTexture   = nullptr;
 
     purrCamera      *mCamera = nullptr;
-
-    vkDescriptorPool *mImGuiDescriptors = nullptr;
+  private: // ImGui stuff
+    bool mSceneWndoOpen = true;
   };
 
 }

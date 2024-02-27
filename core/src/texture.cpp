@@ -35,37 +35,41 @@ namespace PurrfectEngine {
     cleanup();
   }
 
-  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format) {
-    PURR_ASSERT(mFilename, "Failed! File name was not set, did you forgor to call vkTexture::setFilename(const char*)?");
-
+  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width, int height) {
     // Image
+    int texWidth, texHeight;
+    vkBuffer *stagingBuffer = nullptr;
     {
-      int texWidth, texHeight, texChannels;
-      stbi_uc* pixels = stbi_load(mFilename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-      VkDeviceSize imageSize = texWidth * texHeight * 4;
+      if (mFilename) {
+        int texChannels;
+        stbi_uc* pixels = stbi_load(mFilename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+        VkDeviceSize imageSize = texWidth * texHeight * 4;
 
-      PURR_ASSERT(pixels, "Failed to load texture!");
+        PURR_ASSERT(pixels, "Failed to load texture!");
 
-      vkBuffer *stagingBuffer = new vkBuffer(mRenderer);
-      stagingBuffer->initialize(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      
-      stagingBuffer->mapMemory();
-      stagingBuffer->setData(pixels);
-      stagingBuffer->unmapMemory();
+        stagingBuffer = new vkBuffer(mRenderer);
+        stagingBuffer->initialize(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        
+        stagingBuffer->mapMemory();
+        stagingBuffer->setData(pixels);
+        stagingBuffer->unmapMemory();
 
-      stbi_image_free(pixels);
+        stbi_image_free(pixels);
+      } else { PURR_ASSERT(width != -1 && height != -1, "(Texture) Width and height has to be set when not using filename!"); texWidth = width; texHeight = height; }
 
-      mRenderer->CreateImage(texWidth, texHeight, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
+      mRenderer->createImage(texWidth, texHeight, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
 
-      pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-      pool->copyBuffer           (stagingBuffer->get(), mImage, texWidth, texHeight);
-      pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      if (mFilename) {
+        pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        pool->copyBuffer           (stagingBuffer->get(), mImage, texWidth, texHeight);
+      }
+      pool->transitionImageLayout(mImage, format, mFilename ? VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-      delete stagingBuffer;
+      if (stagingBuffer) delete stagingBuffer;
     }
 
     // Image view
-    mView = mRenderer->CreateImageView(mImage, format);
+    mView = mRenderer->createImageView(mImage, format);
 
     // Sampler
     {
@@ -109,6 +113,10 @@ namespace PurrfectEngine {
     PURR_ASSERT(mSet, "Failed to bind texture! Texture not initialized, did you forgor to call void vkTexture::initialize(vkCommandPool *, vkDescriptorPool *, VkFormat)?");
 
     mSet->bind(cmdBuf, pipeline, set);
+  }
+
+  VkDescriptorSet vkTexture::getSet() const { 
+    return mSet ? mSet->get() : VK_NULL_HANDLE;
   }
 
 }

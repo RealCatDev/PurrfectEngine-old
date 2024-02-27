@@ -4,6 +4,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
+#undef max
+
 namespace PurrfectEngine {
 
   static VKAPI_ATTR VkBool32 VKAPI_CALL sDebugCallback(
@@ -81,7 +83,7 @@ namespace PurrfectEngine {
     {
       mImageViews.resize(imageCount);
       uint32_t i = 0;
-      for (auto &img : mImages) mImageViews[i++] = mRenderer->CreateImageView(img, mFormat.value().format);
+      for (auto &img : mImages) mImageViews[i++] = mRenderer->createImageView(img, mFormat.value().format);
     }
   }
 
@@ -499,6 +501,12 @@ namespace PurrfectEngine {
 
       sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
       destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+      sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     } else {
       PURR_ASSERT(false, "`void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout)` has failed! Unsupported layout transition!");
     }
@@ -526,7 +534,7 @@ namespace PurrfectEngine {
   void vkBuffer::initialize(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
     mInitialized = true;
     mSize = size;
-    mRenderer->CreateBuffer(size, usage, properties, mBuffer, mMemory);
+    mRenderer->createBuffer(size, usage, properties, mBuffer, mMemory);
   }
 
   void vkBuffer::cleanup() {
@@ -696,6 +704,7 @@ namespace PurrfectEngine {
 
   bool vkRenderer::beginDraw() {
     PURR_ASSERT(mSizeCb);
+    PURR_ASSERT(mCheckResize);
     PURR_ASSERT(mSwapChain, "Failed! Swapchain is not present, did you forgor to call `PurrfectEngine::vkSwapchain::attach(PurrfectEngine::vkRenderer*)`?");
 
     vkWaitForFences(mDevice, 1, &mInFlightFences[mFrame], VK_TRUE, UINT64_MAX);
@@ -743,10 +752,81 @@ namespace PurrfectEngine {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
       Resize();
     } else PURR_ASSERT(result == VK_SUCCESS, "Failed to present swapchain image!");
+    mCheckResize();
 
     mFrame = (++mFrame % 3);
 
     vkDeviceWaitIdle(mDevice);
+  }
+
+  void vkRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    CHECK_VK(vkCreateBuffer(mDevice, &bufferInfo, nullptr, &buffer));
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(mDevice, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+    CHECK_VK(vkAllocateMemory(mDevice, &allocInfo, nullptr, &bufferMemory));
+
+    vkBindBufferMemory(mDevice, buffer, bufferMemory, 0);
+  }
+
+  void vkRenderer::createImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width  = static_cast<uint32_t>(width);
+    imageInfo.extent.height = static_cast<uint32_t>(height);
+    imageInfo.extent.depth  = 1;
+    imageInfo.mipLevels     = 1;
+    imageInfo.arrayLayers   = 1;
+    imageInfo.format        = format;
+    imageInfo.tiling        = tiling;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage         = usage;
+    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+
+    CHECK_VK(vkCreateImage(mDevice, &imageInfo, nullptr, &image));
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(mDevice, image, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+    CHECK_VK(vkAllocateMemory(mDevice, &allocInfo, nullptr, &imageMemory));
+
+    vkBindImageMemory(mDevice, image, imageMemory, 0);
+  }
+
+  VkImageView vkRenderer::createImageView(VkImage image, VkFormat format) {
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = image;
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VkImageView imageView;
+    CHECK_VK(vkCreateImageView(mDevice, &viewInfo, nullptr, &imageView));
+    return imageView;
   }
 
   bool vkRenderer::CheckLayerSupport(std::vector<const char *> layers) {
@@ -816,76 +896,6 @@ namespace PurrfectEngine {
 
     PURR_ASSERT("Failed to find suitable memory type!");
     return 0;
-  }
-
-  void vkRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    CHECK_VK(vkCreateBuffer(mDevice, &bufferInfo, nullptr, &buffer));
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(mDevice, buffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-    CHECK_VK(vkAllocateMemory(mDevice, &allocInfo, nullptr, &bufferMemory));
-
-    vkBindBufferMemory(mDevice, buffer, bufferMemory, 0);
-  }
-
-  void vkRenderer::CreateImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
-    VkImageCreateInfo imageInfo{};
-    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
-    imageInfo.extent.width  = static_cast<uint32_t>(width);
-    imageInfo.extent.height = static_cast<uint32_t>(height);
-    imageInfo.extent.depth  = 1;
-    imageInfo.mipLevels     = 1;
-    imageInfo.arrayLayers   = 1;
-    imageInfo.format        = format;
-    imageInfo.tiling        = tiling;
-    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imageInfo.usage         = usage;
-    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-
-    CHECK_VK(vkCreateImage(mDevice, &imageInfo, nullptr, &image));
-
-    VkMemoryRequirements memRequirements;
-    vkGetImageMemoryRequirements(mDevice, image, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-    CHECK_VK(vkAllocateMemory(mDevice, &allocInfo, nullptr, &imageMemory));
-
-    vkBindImageMemory(mDevice, image, imageMemory, 0);
-  }
-
-  VkImageView vkRenderer::CreateImageView(VkImage image, VkFormat format) {
-    VkImageViewCreateInfo viewInfo{};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = format;
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-
-    VkImageView imageView;
-    CHECK_VK(vkCreateImageView(mDevice, &viewInfo, nullptr, &imageView));
-    return imageView;
   }
 
   void vkRenderer::InitInstance() {
