@@ -10,6 +10,9 @@
 #include <cstring>
 #include <fstream>
 
+#include <random>
+#include <iomanip>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
@@ -70,47 +73,28 @@ inline OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
 
 namespace PurrfectEngine {
 
-  // class Logger {
-  // public:
-  //   static void initialize() {
-  //     std::vector<spdlog::sink_ptr> logSinks;
-  //     logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-  //     logSinks.emplace_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>("PurrfectEngine.log", true));
+  class UUID {
+  public:
+    UUID(): 
+      mGenerator(mRandomDevice()), mValue(mDistr(mGenerator))
+    {}
+    UUID(const UUID &) = delete;
 
-  //     logSinks[0]->set_pattern("%^[%T] %n: %v%$");
-  //     logSinks[1]->set_pattern("[%T] [%l] %n: %v");
+    uint32_t operator()() {
+      return mValue;
+    }
 
-  //     sCoreLogger = std::make_shared<spdlog::logger>("PurrfectEngine", begin(logSinks), end(logSinks));
-  //     spdlog::register_logger(sCoreLogger);
-  //     sCoreLogger->set_level(spdlog::level::trace);
-  //     sCoreLogger->flush_on(spdlog::level::trace);
-
-  //     sClntLogger = std::make_shared<spdlog::logger>("Application", begin(logSinks), end(logSinks));
-  //     spdlog::register_logger(sClntLogger);
-  //     sClntLogger->set_level(spdlog::level::trace);
-  //     sClntLogger->flush_on(spdlog::level::trace);
-  //   }
-
-  //   static std::shared_ptr<spdlog::logger> &getCoreLogger()   { PURR_CORE_ASSERT(sCoreLogger, "Core logger is NULL! Did you fogor to put \"PurrfectEngine::Logger::initialize();\"?");   return sCoreLogger; }
-  //   static std::shared_ptr<spdlog::logger> &getClientLogger() { PURR_ASSERT     (sClntLogger, "Client logger is NULL! Did you fogor to put \"PurrfectEngine::Logger::initialize();\"?"); return sClntLogger; }
-  // private:
-  //   inline static std::shared_ptr<spdlog::logger> sCoreLogger;
-  //   inline static std::shared_ptr<spdlog::logger> sClntLogger;
-  // };
+    bool operator ==(UUID other) {
+      return mValue == other.mValue;
+    }
+  private:
+    std::random_device mRandomDevice;
+    std::mt19937 mGenerator;
+    std::uniform_int_distribution<uint32_t> mDistr;
+    
+    uint32_t mValue;
+  };
 
 }
-
-// // Core log macros
-// #define PURR_CORE_TRACE(...)   ::PurrfectEngine::Logger::getCoreLogger()->trace   (__VA_ARGS__);
-// #define PURR_CORE_INFO (...)   ::PurrfectEngine::Logger::getCoreLogger()->info    (__VA_ARGS__);
-// #define PURR_CORE_WARN (...)   ::PurrfectEngine::Logger::getCoreLogger()->warn    (__VA_ARGS__);
-// #define PURR_CORE_ERROR(...)   ::PurrfectEngine::Logger::getCoreLogger()->error   (__VA_ARGS__);
-// #define PURR_CORE_FATAL(...) { ::PurrfectEngine::Logger::getCoreLogger()->critical(__VA_ARGS__); exit(EXIT_FAILURE); }
-// // Client log macros
-// #define PURR_TRACE     (...)   ::PurrfectEngine::Logger::getClientLogger()->trace   (__VA_ARGS__);
-// #define PURR_INFO      (...)   ::PurrfectEngine::Logger::getClientLogger()->info    (__VA_ARGS__);
-// #define PURR_WARN      (...)   ::PurrfectEngine::Logger::getClientLogger()->warn    (__VA_ARGS__);
-// #define PURR_ERROR     (...)   ::PurrfectEngine::Logger::getClientLogger()->error   (__VA_ARGS__);
-// #define PURR_FATAL     (...) { ::PurrfectEngine::Logger::getClientLogger()->critical(__VA_ARGS__); exit(EXIT_FAILURE); }
 
 #endif

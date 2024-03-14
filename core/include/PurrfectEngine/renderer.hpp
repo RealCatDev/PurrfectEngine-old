@@ -37,13 +37,15 @@ namespace PurrfectEngine {
     vkSwapchain(vkRenderer *renderer);
     ~vkSwapchain();
 
-    void initialize();
+    void initialize(vkCommandPool *pool);
 
     void attach(vkRenderer *renderer);
   public:
     void chooseSwapSurfaceFormat(const std::vector<VkFormat>& requestedFormats, VkColorSpaceKHR requestedColorSpace);
     void chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& requestedPresentModes);
     void chooseSwapExtent(window *win);
+
+    void setLayout(VkImageLayout layout) { mLayout = layout; }
   public:
     VkExtent2D  getExtent()           const { PURR_ASSERT(mExtent.has_value()); return mExtent.value(); }
     VkImageView getView(uint32_t idx) const { PURR_ASSERT(0 < idx < mImageViews.size()); return mImageViews[idx]; }
@@ -54,6 +56,7 @@ namespace PurrfectEngine {
     std::optional<VkSurfaceFormatKHR> mFormat;
     std::optional<VkPresentModeKHR> mPresentMode;
     std::optional<VkExtent2D> mExtent;
+    std::optional<VkImageLayout> mLayout;
     
     std::vector<VkImage> mImages;
     std::vector<VkImageView> mImageViews;

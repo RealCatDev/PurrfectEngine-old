@@ -66,6 +66,9 @@ namespace PurrfectEngine {
     void initialize(vkCommandPool *pool);
     void cleanup();
     void render(VkCommandBuffer cmdBuf);
+
+    void setVertices(std::vector<MeshVertex> arr) { mVertices = arr; }
+    void setIndices(std::vector<uint32_t> arr)    { mIndices = arr; }
   private:
     vkRenderer *mRenderer = nullptr;
   private:

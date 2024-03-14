@@ -86,19 +86,6 @@ namespace PurrfectEngine {
       mImGui = new ImGuiHelper(mRenderer);
       mImGui->initialize(mWindow, mImGuiDescriptors, mRenderPass);
 
-      mMesh = new vkMesh(mRenderer,
-        {
-          {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{ 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{ 0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }},
-          {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }}
-        },
-        {
-          0, 1, 2, 2, 3, 0
-        }
-      );
-      mMesh->initialize(mCommands);
-
       mTexture = new vkTexture(mRenderer, "../assets/textures/texture.png"); // TODO(CatDev): Create engine assets directory instead of hardcoding it :D <3
       mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat());
 
@@ -125,13 +112,22 @@ namespace PurrfectEngine {
       destroyTextureLayout(); // destroy texture layout
 
       delete mCameraBuf;
-      delete mMesh;
       delete mTexture;
       delete mCommands;
       delete mDescriptors;
       delete mImGuiDescriptors;
       delete mRenderPass;
       delete mSceneRenderPass;
+    }
+
+    void setScene(purrScene *scene) { mScene = scene; }
+
+    PurrfectEngine::vkMesh *createMesh(std::vector<MeshVertex> vertices, std::vector<uint32_t> indices) {
+      auto mesh = new vkMesh(mRenderer,
+        vertices, indices
+      );
+      mesh->initialize(mCommands);
+      return mesh;
     }
   private:
     void Update() {
@@ -152,7 +148,8 @@ namespace PurrfectEngine {
       mSwapchain->chooseSwapSurfaceFormat({ VK_FORMAT_B8G8R8A8_UNORM }, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
       mSwapchain->chooseSwapPresentMode({ VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR });
       mSwapchain->chooseSwapExtent(mWindow);
-      mSwapchain->initialize();
+      mSwapchain->setLayout(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+      mSwapchain->initialize(mCommands);
       mSwapchain->attach(mRenderer);
 
       mFramebuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -257,10 +254,16 @@ namespace PurrfectEngine {
 
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline->get());
 
-        mCameraSet->bind(cmdBuf, mPipeline);
+        if (mScene) {
+          mCameraSet->bind(cmdBuf, mPipeline);
+          mTexture->bind(cmdBuf, mPipeline); // Default texture
 
-        mTexture->bind(cmdBuf, mPipeline);
-        mMesh->render(cmdBuf);
+          for (auto obj : mScene->getObjects()) {
+            if (!obj->hasComponent("Mesh")) continue;
+            meshComponent *meshCmp = (meshComponent*) obj->getComponent("Mesh");
+            meshCmp->get()->render(cmdBuf);
+          }
+        }
 
         vkCmdEndRenderPass(cmdBuf);
       }
@@ -384,7 +387,9 @@ namespace PurrfectEngine {
     vkMesh          *mMesh      = nullptr;
     vkTexture       *mTexture   = nullptr;
 
-    purrCamera      *mCamera = nullptr;
+    purrCamera      *mCamera    = nullptr;
+
+    purrScene       *mScene     = nullptr;
   private: // ImGui stuff
     bool mSceneWndoOpen = true;
   };

@@ -1,3 +1,5 @@
+#include <PurrfectEngine/scene.hpp>
+
 #include "renderer.hpp"
 
 #include <PurrfectEngine/window.hpp>
@@ -7,10 +9,30 @@ int main (int argc, char **argv) {
   PurrfectEngine::renderer *renderer = new PurrfectEngine::renderer(window);
   renderer->initialize();
 
+  PurrfectEngine::purrScene *scene = new PurrfectEngine::purrScene();
+  {
+    auto mesh = renderer->createMesh({
+      {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+      {{ 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }},
+      {{ 0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }},
+      {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }}
+    }, {
+      0, 1, 2, 2, 3, 0
+    });
+
+    auto obj = new PurrfectEngine::purrObject("meow");
+    obj->addComponent(new PurrfectEngine::meshComponent(mesh));
+    scene->addObject(obj);
+  }
+  renderer->setScene(scene);
+
   while (!window->shouldClose()) {
     glfwPollEvents();
     renderer->render();
   }
+
+  delete scene;
+
   delete renderer;
   delete window;
 

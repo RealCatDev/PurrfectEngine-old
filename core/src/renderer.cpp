@@ -31,12 +31,13 @@ namespace PurrfectEngine {
     }
   }
 
-  void vkSwapchain::initialize() {
+  void vkSwapchain::initialize(vkCommandPool *pool) {
     auto swapChainSupport = mRenderer->QuerySwapChainSupport(mRenderer->mPhysicalDevice);
 
     PURR_ASSERT(mFormat.has_value());
     PURR_ASSERT(mPresentMode.has_value());
     PURR_ASSERT(mExtent.has_value());
+    PURR_ASSERT(mLayout.has_value());
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -80,10 +81,10 @@ namespace PurrfectEngine {
       vkGetSwapchainImagesKHR(mRenderer->mDevice, mSwapChain, &imageCount, mImages.data());
     }
 
-    {
-      mImageViews.resize(imageCount);
-      uint32_t i = 0;
-      for (auto &img : mImages) mImageViews[i++] = mRenderer->createImageView(img, mFormat.value().format);
+    mImageViews.resize(imageCount);
+    for (uint32_t i = 0; i < imageCount; ++i) {
+      pool->transitionImageLayout(mImages[i], mFormat.value().format, VK_IMAGE_LAYOUT_UNDEFINED, mLayout.value());
+      mImageViews[i] = mRenderer->createImageView(mImages[i], mFormat.value().format);
     }
   }
 
@@ -489,7 +490,13 @@ namespace PurrfectEngine {
     VkPipelineStageFlags sourceStage;
     VkPipelineStageFlags destinationStage;
 
-    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
+      barrier.srcAccessMask = 0;
+      barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+
+      sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
       barrier.srcAccessMask = 0;
       barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
