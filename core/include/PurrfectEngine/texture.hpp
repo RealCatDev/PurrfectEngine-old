@@ -25,7 +25,7 @@ namespace PurrfectEngine {
 
     void setFilename(const char *filename) { mFilename = (char*)filename; }
 
-    void initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width = -1, int height = -1);
+    void initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width = -1, int height = -1, bool mipmaps = true);
     void cleanup();
     void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 1);
 
@@ -39,6 +39,7 @@ namespace PurrfectEngine {
     VkDeviceMemory   mImageMemory;
     VkImageView      mView;
     VkSampler        mSampler;
+    uint32_t         mMipLevels;
 
     vkDescriptorSet *mSet = nullptr;
 

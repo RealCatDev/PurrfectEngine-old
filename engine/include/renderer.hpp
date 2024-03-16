@@ -180,7 +180,7 @@ namespace PurrfectEngine {
       mSceneFramebuffers.clear();
       for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         vkTexture *texture = new vkTexture(mRenderer);
-        texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, mSceneExtent.width, mSceneExtent.height);
+        texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, mSceneExtent.width, mSceneExtent.height, false);
         auto fb = new vkFramebuffer(mRenderer);
         fb->setRenderPass(mSceneRenderPass);
         fb->setExtent(mSceneExtent);
