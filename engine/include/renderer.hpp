@@ -86,7 +86,7 @@ namespace PurrfectEngine {
       mImGui = new ImGuiHelper(mRenderer);
       mImGui->initialize(mWindow, mImGuiDescriptors, mRenderPass);
 
-      mTexture = new vkTexture(mRenderer, "../assets/textures/texture.png"); // TODO(CatDev): Create engine assets directory instead of hardcoding it :D <3
+      mTexture = new vkTexture(mRenderer, "./assets/textures/texture.png"); // TODO(CatDev): Create engine assets directory instead of hardcoding it :D <3
       mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat());
 
       mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
@@ -200,8 +200,8 @@ namespace PurrfectEngine {
 
       auto vertBuf = new vkShader(mRenderer);
       auto fragBuf = new vkShader(mRenderer);
-      vertBuf->load("../assets/shaders/vert.spv");
-      fragBuf->load("../assets/shaders/frag.spv");
+      vertBuf->load("./assets/shaders/vert.spv");
+      fragBuf->load("./assets/shaders/frag.spv");
       mPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertBuf);
       mPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragBuf);
       mPipeline->initialize();
