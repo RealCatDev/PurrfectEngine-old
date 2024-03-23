@@ -63,8 +63,7 @@ namespace PurrfectEngine {
     x -= width / 2;
     y /= 2;
     y -= height / 2;
-    setX(x);
-    setY(y);
+    setPos({x,y});
 
     glfwSetWindowUserPointer(mWindow, this);
     glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow *win, int w, int h) {
@@ -80,7 +79,8 @@ namespace PurrfectEngine {
       state.xPos = x;
       state.yPos = y;
     });
-    mInput->setWindow(mWindow);
+
+    mInput = new Input::input(this);
   }
 
   window::~window() {
@@ -100,20 +100,12 @@ namespace PurrfectEngine {
     glfwSetWindowMonitor(mWindow, monitor, x, y, w, h, GLFW_DONT_CARE);
   }
 
-  void window::setWidth(int w) {
-    glfwSetWindowSize(mWindow, mState.Width = w, mState.Height);
+  void window::setSize(glm::ivec2 size) {
+    glfwSetWindowSize(mWindow, size.x, size.y);
   }
 
-  void window::setHeight(int h) {
-    glfwSetWindowSize(mWindow, mState.Width, mState.Height = h);
-  }
-
-  void window::setX(int x) {
-    glfwSetWindowPos(mWindow, mState.xPos = x, mState.yPos);
-  }
-
-  void window::setY(int y) {
-    glfwSetWindowPos(mWindow, mState.xPos, mState.yPos = y);
+  void window::setPos(glm::ivec2 pos) {
+    glfwSetWindowPos(mWindow, pos.x, pos.y);
   }
 
   void window::setCursor(cursor *cur) {

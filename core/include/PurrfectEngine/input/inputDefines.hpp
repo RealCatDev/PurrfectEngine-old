@@ -1,11 +1,13 @@
-#ifndef PURRENGINE_INPUTSRC_INPUTDEFINES_HPP
-#define PURRENGINE_INPUTSRC_INPUTDEFINES_HPP
+#ifndef PURRENGINE_INPUT_INPUTDEFINES_HPP_
+#define PURRENGINE_INPUT_INPUTDEFINES_HPP_
 
 #include <GLFW/glfw3.h>
 
 #define KEYBOARD_SIZE 282
 
-    enum class KeyBinds {
+namespace PurrfectEngine::Input {
+
+    enum class keyBinds {
         KEY_UNKNOWN = GLFW_KEY_UNKNOWN,
 
         // Numbers
@@ -145,7 +147,7 @@
 
     };
 
-    enum class MouseButton 
+    enum class mouseButton 
     {
         MOUSE_1 = GLFW_MOUSE_BUTTON_1,
         MOUSE_2 = GLFW_MOUSE_BUTTON_2,
@@ -161,5 +163,7 @@
         MOUSE_MIDDLE = GLFW_MOUSE_BUTTON_MIDDLE,
         MOUSE_RIGHT = GLFW_MOUSE_BUTTON_RIGHT,
     };
+
+}
 
 #endif

@@ -2,6 +2,7 @@
 #define PURRENGINE_UTILS_HPP_
 
 #include "PurrfectEngine/core.hpp"
+#include "PurrfectEngine/application.hpp"
 
 namespace PurrfectEngine {
 
@@ -24,6 +25,14 @@ namespace PurrfectEngine {
       return buffer;
     }
 
+  }
+
+  static const char *Asset(const char *path) {
+    const char *assetDir = application::getInstance()->getAssetDir();
+    std::string fullDir = "";
+    fullDir += assetDir;
+    fullDir += path;
+    return fullDir.c_str();
   }
 
 }

@@ -1,13 +1,13 @@
 #ifndef PURRENGINE_RENDERER_HPP_
 #define PURRENGINE_RENDERER_HPP_
 
+#include <vulkan/vulkan.h>
+
 #include "PurrfectEngine/core.hpp"
 #include "PurrfectEngine/utils.hpp"
 #include "PurrfectEngine/window.hpp"
 #include "PurrfectEngine/mesh.hpp"
 #include "PurrfectEngine/texture.hpp"
-
-#include <vulkan/vulkan.h>
 
 #define MAX_FRAMES_IN_FLIGHT 3
 

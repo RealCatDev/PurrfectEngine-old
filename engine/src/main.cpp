@@ -3,8 +3,13 @@
 #include "renderer.hpp"
 
 #include <PurrfectEngine/window.hpp>
+#include <PurrfectEngine/application.hpp>
 
 int main (int argc, char **argv) {
+  PurrfectEngine::application *app = new PurrfectEngine::application();
+  app->setAssetDir("../assets/");
+  if (argc > 1) app->setAssetDir(argv[2]);
+
   PurrfectEngine::window   *window   = new PurrfectEngine::window("PurrfectEngine", 1920, 1080);
   PurrfectEngine::renderer *renderer = new PurrfectEngine::renderer(window);
   renderer->initialize();
