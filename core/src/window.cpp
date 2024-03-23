@@ -80,6 +80,7 @@ namespace PurrfectEngine {
       state.xPos = x;
       state.yPos = y;
     });
+    mInput->setWindow(mWindow);
   }
 
   window::~window() {
