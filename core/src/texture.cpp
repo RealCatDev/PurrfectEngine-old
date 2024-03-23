@@ -35,7 +35,7 @@ namespace PurrfectEngine {
     cleanup();
   }
 
-  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width, int height, bool mipmaps) {
+  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, VkImageLayout targetLayout, int width, int height, bool mipmaps, bool msaaSamples, bool descriptor) {
     // Image
     int texWidth, texHeight;
     vkBuffer *stagingBuffer = nullptr;
@@ -59,7 +59,7 @@ namespace PurrfectEngine {
 
       mMipLevels = mipmaps ? (static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1) : 1;
 
-      mRenderer->createImage(texWidth, texHeight, mMipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
+      mRenderer->createImage(texWidth, texHeight, mMipLevels, msaaSamples ? mRenderer->mMsaaSamples : VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
 
       pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
       if (mFilename) {
@@ -68,7 +68,7 @@ namespace PurrfectEngine {
 
       if (stagingBuffer) delete stagingBuffer;
     }
-    pool->generateMipmaps(mImage, format, texWidth, texHeight, mMipLevels);
+    pool->generateMipmaps(mImage, format, texWidth, texHeight, mMipLevels, targetLayout);
 
     // Image view
     mView = mRenderer->createImageView(mImage, format, VK_IMAGE_ASPECT_COLOR_BIT, mMipLevels);
@@ -97,14 +97,15 @@ namespace PurrfectEngine {
     }
 
     // Descriptor set
-    {
+    if (descriptor) {
       mSet = descriptors->allocate(getTextureLayout());
-      mSet->write(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mView, mSampler);
+      mSet->write(targetLayout, mView, mSampler);
+      mSetB = true;
     }
   }
 
   void vkTexture::cleanup() {
-    if (mSet) delete mSet;
+    if (mSetB) { mSetB = false; delete mSet; }
     vkDestroySampler(mRenderer->mDevice, mSampler, nullptr);
     vkDestroyImageView(mRenderer->mDevice, mView, nullptr);
     vkDestroyImage(mRenderer->mDevice, mImage, nullptr);

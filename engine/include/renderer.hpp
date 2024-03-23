@@ -52,10 +52,21 @@ namespace PurrfectEngine {
       mRenderPass->initialize();
 
       mSceneRenderPass = new vkRenderPass(mRenderer);
-      attachment = vkRenderPass::attachmnetInfo();
-      attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-      attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      mSceneRenderPass->addAttachment(attachment);
+      {
+        attachment = vkRenderPass::attachmnetInfo();
+        attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment.msaaSamples = true;
+        mSceneRenderPass->addAttachment(attachment);
+      }
+      
+      {
+        attachment = vkRenderPass::attachmnetInfo();
+        attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        mSceneRenderPass->addAttachmentResolve(attachment);
+      }
       mSceneRenderPass->initialize();
 
       mRenderer->setSizeCallback([this](){ Resize(); });
@@ -87,7 +98,7 @@ namespace PurrfectEngine {
       mImGui->initialize(mWindow, mImGuiDescriptors, mRenderPass);
 
       mTexture = new vkTexture(mRenderer, Asset("textures/texture.png"));
-      mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat());
+      mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
     }
@@ -177,17 +188,26 @@ namespace PurrfectEngine {
 
     void CreateScene() {
       mSceneImages.clear();
+      mSceneResolveImages.clear();
       mSceneFramebuffers.clear();
       for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        vkTexture *resolveTexture = new vkTexture(mRenderer);
         vkTexture *texture = new vkTexture(mRenderer);
-        texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, mSceneExtent.width, mSceneExtent.height, false);
         auto fb = new vkFramebuffer(mRenderer);
         fb->setRenderPass(mSceneRenderPass);
+        {
+          resolveTexture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
+          fb->addAttachment(resolveTexture->getView());
+        }
+        {
+          texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false);
+          fb->addAttachment(texture->getView());
+        }
         fb->setExtent(mSceneExtent);
-        fb->addAttachment(texture->getView());
         fb->initialize();
         
         mSceneImages.push_back(texture);
+        mSceneResolveImages.push_back(resolveTexture);
         mSceneFramebuffers.push_back(fb);
       }
 
@@ -208,8 +228,9 @@ namespace PurrfectEngine {
     }
 
     void CleanupScene() {
-      for (size_t i = 0; i < mSceneImages.size(); ++i)       delete mSceneImages[i];
-      for (size_t i = 0; i < mSceneFramebuffers.size(); ++i) delete mSceneFramebuffers[i];
+      for (size_t i = 0; i < mSceneImages.size(); ++i)        delete mSceneImages[i];
+      for (size_t i = 0; i < mSceneResolveImages.size(); ++i) delete mSceneResolveImages[i];
+      for (size_t i = 0; i < mSceneFramebuffers.size(); ++i)  delete mSceneFramebuffers[i];
       delete mPipeline;
     }
 
@@ -378,6 +399,7 @@ namespace PurrfectEngine {
     bool             mSceneResized = false;
 
     std::vector<vkTexture*>     mSceneImages{};
+    std::vector<vkTexture*>     mSceneResolveImages{};
     std::vector<vkFramebuffer*> mSceneFramebuffers{};
 
     vkPipeline      *mPipeline  = nullptr;

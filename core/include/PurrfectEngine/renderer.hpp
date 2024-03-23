@@ -126,12 +126,14 @@ namespace PurrfectEngine {
       VkImageLayout         finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
       VkImageLayout         layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       VkFormat              format        = VK_FORMAT_UNDEFINED;
+      bool                  msaaSamples   = false;
     };
   public:
     vkRenderPass(vkRenderer *renderer);
     ~vkRenderPass();
 
     void addAttachment(attachmnetInfo info);
+    void addAttachmentResolve(attachmnetInfo info);
 
     void initialize();
 
@@ -140,6 +142,7 @@ namespace PurrfectEngine {
     vkRenderer *mRenderer;
   private:
     std::vector<VkImageLayout>           mAttachmentLayouts{};
+    std::vector<VkImageLayout>           mAttachmentResolveLayouts{};
     std::vector<VkAttachmentDescription> mAttachmentDescs{};
     VkRenderPass mPass;
   };
@@ -181,7 +184,7 @@ namespace PurrfectEngine {
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void copyBuffer(VkBuffer buffer, VkImage image, int width, int height);
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
-    void generateMipmaps(VkImage image, VkFormat format, int width, int height, uint32_t mipLevels);
+    void generateMipmaps(VkImage image, VkFormat format, int width, int height, uint32_t mipLevels, VkImageLayout targetLayout);
   private:
     vkRenderer *mRenderer = nullptr;
   private:

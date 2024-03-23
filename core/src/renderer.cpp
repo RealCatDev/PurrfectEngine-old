@@ -288,31 +288,52 @@ namespace PurrfectEngine {
     desc.initialLayout  = info.initialLayout;
     desc.finalLayout    = info.finalLayout;
     desc.format         = info.format;
-    desc.samples        = mRenderer->mMsaaSamples;
+    desc.samples        = info.msaaSamples ? mRenderer->mMsaaSamples : VK_SAMPLE_COUNT_1_BIT;
     mAttachmentDescs.push_back(desc);
     mAttachmentLayouts.push_back(info.layout);
   }
 
+  void vkRenderPass::addAttachmentResolve(attachmnetInfo info) {
+    VkAttachmentDescription desc{};
+    desc.loadOp         = info.loadOp;
+    desc.storeOp        = info.storeOp;
+    desc.stencilLoadOp  = info.stcLoadOp;
+    desc.stencilStoreOp = info.stcStoreOp;
+    desc.initialLayout  = info.initialLayout;
+    desc.finalLayout    = info.finalLayout;
+    desc.format         = info.format;
+    desc.samples        = VK_SAMPLE_COUNT_1_BIT;
+    mAttachmentDescs.push_back(desc);
+    mAttachmentResolveLayouts.push_back(info.layout);
+  }
+
   void vkRenderPass::initialize() {
-    uint32_t depthRefIdx = -1;
     std::vector<VkAttachmentReference> refs{};
-    VkAttachmentReference *depthRef{};
+    std::vector<VkAttachmentReference> resolveRefs{};
+    VkAttachmentReference *depthRef = nullptr;
 
     uint32_t i = 0;
-    for (const auto &desc : mAttachmentDescs) {
+    for (const auto &layout : mAttachmentLayouts) {
       VkAttachmentReference ref{};
-      ref.attachment = i;
-      ref.layout = mAttachmentLayouts[i];
-      if (mAttachmentLayouts[i++] == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
-        depthRef = &ref;
+      ref.attachment = i++;
+      ref.layout = layout;
+      if (layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) depthRef = &ref;
       else refs.push_back(ref);
+    }
+
+    for (const auto &layout : mAttachmentResolveLayouts) {
+      VkAttachmentReference ref{};
+      ref.attachment = i++;
+      ref.layout = layout;
+      resolveRefs.push_back(ref);
     }
 
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = static_cast<uint32_t>(refs.size());
     subpass.pColorAttachments = refs.data();
-    if (depthRefIdx >= 0) subpass.pDepthStencilAttachment = depthRef;
+    subpass.pResolveAttachments = resolveRefs.data();
+    if (depthRef) subpass.pDepthStencilAttachment = depthRef;
 
     VkSubpassDependency dependency{};
     dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
@@ -530,7 +551,7 @@ namespace PurrfectEngine {
     endSingleTimeCommands(commandBuffer);
   }
 
-  void vkCommandPool::generateMipmaps(VkImage image, VkFormat format, int width, int height, uint32_t mipLevels) {
+  void vkCommandPool::generateMipmaps(VkImage image, VkFormat format, int width, int height, uint32_t mipLevels, VkImageLayout targetLayout) {
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(mRenderer->mPhysicalDevice, format, &formatProperties);
 
@@ -585,7 +606,7 @@ namespace PurrfectEngine {
                      VK_FILTER_LINEAR);
 
       barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-      barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      barrier.newLayout = targetLayout;
       barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -601,7 +622,7 @@ namespace PurrfectEngine {
 
     barrier.subresourceRange.baseMipLevel = mipLevels - 1;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.newLayout = targetLayout;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
@@ -950,7 +971,7 @@ namespace PurrfectEngine {
       createInfo = {};
       createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
       createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-      createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+      createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT;
       createInfo.pfnUserCallback = sDebugCallback;
     }
   #endif
@@ -1146,7 +1167,7 @@ namespace PurrfectEngine {
     }
 
     mPhysicalDevice = devicesMap[curScore];
-    mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;//GetMaxUsableSampleCount(mPhysicalDevice);
+    mMsaaSamples = GetMaxUsableSampleCount(mPhysicalDevice);
     FindQueueFamilies(mPhysicalDevice);
   }
 
