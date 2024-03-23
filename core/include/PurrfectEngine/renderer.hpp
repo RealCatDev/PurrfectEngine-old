@@ -126,7 +126,6 @@ namespace PurrfectEngine {
       VkImageLayout         finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
       VkImageLayout         layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       VkFormat              format        = VK_FORMAT_UNDEFINED;
-      VkSampleCountFlagBits samples       = VK_SAMPLE_COUNT_1_BIT;
     };
   public:
     vkRenderPass(vkRenderer *renderer);
@@ -303,7 +302,7 @@ namespace PurrfectEngine {
     void setResizeCheck(SizeCallbackFn cb) { mCheckResize = cb; }
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
-    void createImage(int width, int height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    void createImage(int width, int height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
     VkDevice getDevice() const { return mDevice; }

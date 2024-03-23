@@ -190,7 +190,7 @@ namespace PurrfectEngine {
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = mMsaaSamples;
+    multisampling.rasterizationSamples = mRenderer->mMsaaSamples;
     multisampling.minSampleShading = 1.0f;
     multisampling.pSampleMask = nullptr;
     multisampling.alphaToCoverageEnable = VK_FALSE;
@@ -288,7 +288,7 @@ namespace PurrfectEngine {
     desc.initialLayout  = info.initialLayout;
     desc.finalLayout    = info.finalLayout;
     desc.format         = info.format;
-    desc.samples        = info.samples;
+    desc.samples        = mRenderer->mMsaaSamples;
     mAttachmentDescs.push_back(desc);
     mAttachmentLayouts.push_back(info.layout);
   }
@@ -872,7 +872,7 @@ namespace PurrfectEngine {
     vkBindBufferMemory(mDevice, buffer, bufferMemory, 0);
   }
 
-  void vkRenderer::createImage(int width, int height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+  void vkRenderer::createImage(int width, int height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType     = VK_IMAGE_TYPE_2D;
@@ -885,7 +885,7 @@ namespace PurrfectEngine {
     imageInfo.tiling        = tiling;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage         = usage;
-    imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.samples       = numSamples;
     imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
 
     CHECK_VK(vkCreateImage(mDevice, &imageInfo, nullptr, &image));
@@ -1146,7 +1146,7 @@ namespace PurrfectEngine {
     }
 
     mPhysicalDevice = devicesMap[curScore];
-    mMsaaSamples = GetMaxUsableSampleCount(mPhysicalDevice);
+    mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;//GetMaxUsableSampleCount(mPhysicalDevice);
     FindQueueFamilies(mPhysicalDevice);
   }
 
