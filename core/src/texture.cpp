@@ -35,7 +35,7 @@ namespace PurrfectEngine {
     cleanup();
   }
 
-  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width, int height) {
+  void vkTexture::initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, int width, int height, bool mipmaps) {
     // Image
     int texWidth, texHeight;
     vkBuffer *stagingBuffer = nullptr;
@@ -55,21 +55,23 @@ namespace PurrfectEngine {
         stagingBuffer->unmapMemory();
 
         stbi_image_free(pixels);
-      } else { PURR_ASSERT(width != -1 && height != -1, "(Texture) Width and height has to be set when not using filename!"); texWidth = width; texHeight = height; }
+      } else { PURR_ASSERT(width != -1 && height != -1, "(Texture) Width and height have to be set when not using filename!"); texWidth = width; texHeight = height; }
 
-      mRenderer->createImage(texWidth, texHeight, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
+      mMipLevels = mipmaps ? (static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1) : 1;
 
+      mRenderer->createImage(texWidth, texHeight, mMipLevels, VK_SAMPLE_COUNT_1_BIT, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mImage, mImageMemory);
+
+      pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mMipLevels);
       if (mFilename) {
-        pool->transitionImageLayout(mImage, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         pool->copyBuffer           (stagingBuffer->get(), mImage, texWidth, texHeight);
       }
-      pool->transitionImageLayout(mImage, format, mFilename ? VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL : VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       if (stagingBuffer) delete stagingBuffer;
     }
+    pool->generateMipmaps(mImage, format, texWidth, texHeight, mMipLevels);
 
     // Image view
-    mView = mRenderer->createImageView(mImage, format);
+    mView = mRenderer->createImageView(mImage, format, VK_IMAGE_ASPECT_COLOR_BIT, mMipLevels);
 
     // Sampler
     {
@@ -87,9 +89,9 @@ namespace PurrfectEngine {
       samplerInfo.compareEnable = VK_FALSE;
       samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
       samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-      samplerInfo.mipLodBias = 0.0f;
       samplerInfo.minLod = 0.0f;
-      samplerInfo.maxLod = 0.0f;
+      samplerInfo.maxLod = static_cast<float>(mMipLevels);
+      samplerInfo.mipLodBias = 0.0f;
 
       CHECK_VK(vkCreateSampler(mRenderer->mDevice, &samplerInfo, nullptr, &mSampler));
     }

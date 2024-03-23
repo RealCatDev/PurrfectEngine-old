@@ -126,7 +126,6 @@ namespace PurrfectEngine {
       VkImageLayout         finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
       VkImageLayout         layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       VkFormat              format        = VK_FORMAT_UNDEFINED;
-      VkSampleCountFlagBits samples       = VK_SAMPLE_COUNT_1_BIT;
     };
   public:
     vkRenderPass(vkRenderer *renderer);
@@ -181,7 +180,8 @@ namespace PurrfectEngine {
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void copyBuffer(VkBuffer buffer, VkImage image, int width, int height);
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+    void generateMipmaps(VkImage image, VkFormat format, int width, int height, uint32_t mipLevels);
   private:
     vkRenderer *mRenderer = nullptr;
   private:
@@ -302,8 +302,8 @@ namespace PurrfectEngine {
     void setResizeCheck(SizeCallbackFn cb) { mCheckResize = cb; }
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory);
-    void createImage(int width, int height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-    VkImageView createImageView(VkImage image, VkFormat format);
+    void createImage(int width, int height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
     VkDevice getDevice() const { return mDevice; }
   private: // Utility functions
@@ -313,6 +313,7 @@ namespace PurrfectEngine {
     #endif
     vkSwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
     uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+    VkSampleCountFlagBits GetMaxUsableSampleCount(VkPhysicalDevice device);
   private: // Vulkan related functions
     void InitInstance();
     #ifdef PURR_DEBUG
@@ -347,6 +348,8 @@ namespace PurrfectEngine {
     uint32_t mImageIndex;
 
     vkSwapchain *mSwapChain = nullptr;
+
+    VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
   private: // Other
     SizeCallbackFn mSizeCb = nullptr;
     SizeCallbackFn mCheckResize = nullptr;
