@@ -29,10 +29,14 @@ namespace PurrfectEngine {
 
   static const char *Asset(const char *path) {
     const char *assetDir = application::getInstance()->getAssetDir();
-    std::string fullDir = "";
-    fullDir += assetDir;
-    fullDir += path;
-    return fullDir.c_str();
+    size_t assetDirLen = strlen(assetDir), fullDirLen = 0;
+    char *fullDir = (char*)malloc(sizeof(char) * (fullDirLen = (strlen(path) + assetDirLen + 1)));
+    for (size_t i = 0; i < strlen(path) + assetDirLen; ++i) {
+      if (i < assetDirLen) fullDir[i] = assetDir[i];
+      else fullDir[i] = path[i - assetDirLen];
+    }
+    fullDir[fullDirLen-1] = '\0';
+    return (const char*)fullDir;
   }
 
 }
