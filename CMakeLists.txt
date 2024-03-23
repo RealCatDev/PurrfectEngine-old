@@ -39,3 +39,4 @@ set(IMGUI_FILES ${IMGUI_DIR}backends/imgui_impl_glfw.cpp ${IMGUI_DIR}backends/im
 
 add_subdirectory(core)
 add_subdirectory(engine)
+add_subdirectory(engine_2d)

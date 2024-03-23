@@ -6,6 +6,7 @@
 #include <functional>
 #define GLFW_INCLUDE_VULKAN
 #include <glfw/glfw3.h>
+#include "./inputsrc/input.hpp"
 
 namespace PurrfectEngine {
 
@@ -68,6 +69,7 @@ namespace PurrfectEngine {
     GLFWwindow *get() const { return mWindow; }
   private:
     GLFWwindow *mWindow = NULL;
+    Input *mInput;
     windowState mState{};
   };
 
