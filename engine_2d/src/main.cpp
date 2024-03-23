@@ -3,7 +3,7 @@
 
 int main (int argc, char **argv) {
   PurrfectEngine::window   *window   = new PurrfectEngine::window("PurrfectEngine", 1920, 1080);
-  PurrfectEngine::Input input;
+  PurrfectEngine::purrInput input;
 
 
   while (!window->shouldClose()) {

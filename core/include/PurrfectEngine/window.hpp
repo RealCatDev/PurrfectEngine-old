@@ -69,7 +69,7 @@ namespace PurrfectEngine {
     GLFWwindow *get() const { return mWindow; }
   private:
     GLFWwindow *mWindow = NULL;
-    Input *mInput;
+    purrInput *mInput;
     windowState mState{};
   };
 

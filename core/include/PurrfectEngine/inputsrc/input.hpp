@@ -8,9 +8,9 @@
 
 namespace PurrfectEngine {
 
-    class Input {
+    class purrInput {
     public:
-        Input() {}
+        purrInput() {}
 
         void setWindow(GLFWwindow* newWindow) {
             window = newWindow;
