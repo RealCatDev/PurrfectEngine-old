@@ -14,3 +14,6 @@
 [submodule "deps/ImGuizmo"]
 	path = deps/ImGuizmo
 	url = https://github.com/RealCatDev/ImGuizmo
+[submodule "deps/assimp"]
+	path = deps/assimp
+	url = https://github.com/assimp/assimp
