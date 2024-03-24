@@ -79,6 +79,8 @@ namespace PurrfectEngine {
     void addShader(VkShaderStageFlagBits stage, vkShader *shader);
     void addDescriptor(vkDescriptorLayout *layout) { mDescriptors.push_back(layout); }
 
+    void enableDepthStencil(VkBool32 testEnable, VkBool32 writeEnable, VkCompareOp compareOp, VkBool32 boundsTestEnable, VkBool32 stencilTestEnable);
+
     void setRenderPass(vkRenderPass *renderPass) { mRenderPass = renderPass; }
 
     void initialize();
@@ -95,6 +97,9 @@ namespace PurrfectEngine {
     VkVertexInputBindingDescription               *mVertexBindingDescription = nullptr;
 
     std::vector<vkDescriptorLayout*>               mDescriptors{};
+
+    VkPipelineDepthStencilStateCreateInfo mDepthStencil;
+    bool                                  mDepthStencilEnable = false;
 
     VkPipelineLayout mLayout;
     VkPipeline       mPipeline;
@@ -117,11 +122,11 @@ namespace PurrfectEngine {
     friend class vkPipeline;
     friend class vkFramebuffer;
   public:
-    struct attachmnetInfo {
+    struct attachmentInfo {
       VkAttachmentLoadOp    loadOp        = VK_ATTACHMENT_LOAD_OP_CLEAR;
       VkAttachmentStoreOp   storeOp       = VK_ATTACHMENT_STORE_OP_STORE;
-      VkAttachmentLoadOp    stcLoadOp     = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      VkAttachmentStoreOp   stcStoreOp    = VK_ATTACHMENT_STORE_OP_STORE;
+      VkAttachmentLoadOp    stcLoadOp     = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      VkAttachmentStoreOp   stcStoreOp    = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       VkImageLayout         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
       VkImageLayout         finalLayout   = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
       VkImageLayout         layout        = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -132,8 +137,8 @@ namespace PurrfectEngine {
     vkRenderPass(vkRenderer *renderer);
     ~vkRenderPass();
 
-    void addAttachment(attachmnetInfo info);
-    void addAttachmentResolve(attachmnetInfo info);
+    void addAttachment(attachmentInfo info);
+    void addAttachmentResolve(attachmentInfo info);
 
     void initialize();
 
@@ -308,6 +313,9 @@ namespace PurrfectEngine {
     void createImage(int width, int height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
+    VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+    VkFormat getDepthFormat();
+
     VkDevice getDevice() const { return mDevice; }
   private: // Utility functions
     bool CheckLayerSupport(std::vector<const char *> layers);
@@ -353,6 +361,7 @@ namespace PurrfectEngine {
     vkSwapchain *mSwapChain = nullptr;
 
     VkSampleCountFlagBits mMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    VkFormat mDepthFormat = VK_FORMAT_UNDEFINED;  
   private: // Other
     SizeCallbackFn mSizeCb = nullptr;
     SizeCallbackFn mCheckResize = nullptr;

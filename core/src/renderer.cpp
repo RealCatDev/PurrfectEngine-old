@@ -6,6 +6,11 @@
 
 #undef max
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace PurrfectEngine {
 
   static VKAPI_ATTR VkBool32 VKAPI_CALL sDebugCallback(
@@ -147,6 +152,17 @@ namespace PurrfectEngine {
     mShaders.push_back(shader);
   }
 
+  void vkPipeline::enableDepthStencil(VkBool32 testEnable, VkBool32 writeEnable, VkCompareOp compareOp, VkBool32 boundsTestEnable, VkBool32 stencilTestEnable) {
+    mDepthStencilEnable = true;
+    mDepthStencil = {};
+    mDepthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    mDepthStencil.depthTestEnable = testEnable;
+    mDepthStencil.depthWriteEnable = writeEnable;
+    mDepthStencil.depthCompareOp = compareOp;
+    mDepthStencil.depthBoundsTestEnable = boundsTestEnable;
+    mDepthStencil.stencilTestEnable = stencilTestEnable;
+  }
+
   void vkPipeline::initialize() {
     PURR_ASSERT(mRenderPass);
 
@@ -239,7 +255,7 @@ namespace PurrfectEngine {
     pipelineInfo.pViewportState = &viewportState;
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
-    pipelineInfo.pDepthStencilState = nullptr; // TODO
+    pipelineInfo.pDepthStencilState = mDepthStencilEnable ? &mDepthStencil : nullptr;
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.layout = mLayout;
@@ -279,7 +295,7 @@ namespace PurrfectEngine {
     vkDestroyRenderPass(mRenderer->mDevice, mPass, nullptr);
   }
 
-  void vkRenderPass::addAttachment(attachmnetInfo info) {
+  void vkRenderPass::addAttachment(attachmentInfo info) {
     VkAttachmentDescription desc{};
     desc.loadOp         = info.loadOp;
     desc.storeOp        = info.storeOp;
@@ -293,7 +309,7 @@ namespace PurrfectEngine {
     mAttachmentLayouts.push_back(info.layout);
   }
 
-  void vkRenderPass::addAttachmentResolve(attachmnetInfo info) {
+  void vkRenderPass::addAttachmentResolve(attachmentInfo info) {
     VkAttachmentDescription desc{};
     desc.loadOp         = info.loadOp;
     desc.storeOp        = info.storeOp;
@@ -317,7 +333,7 @@ namespace PurrfectEngine {
       VkAttachmentReference ref{};
       ref.attachment = i++;
       ref.layout = layout;
-      if (layout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) depthRef = &ref;
+      if (layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) depthRef = &ref;
       else refs.push_back(ref);
     }
 
@@ -338,10 +354,16 @@ namespace PurrfectEngine {
     VkSubpassDependency dependency{};
     dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass    = 0;
-    dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     dependency.srcAccessMask = 0;
-    dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    if (depthRef) {
+      dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    } else {
+      dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    }
 
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -939,6 +961,28 @@ namespace PurrfectEngine {
     VkImageView imageView;
     CHECK_VK(vkCreateImageView(mDevice, &viewInfo, nullptr, &imageView));
     return imageView;
+  }
+
+  VkFormat vkRenderer::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
+    for (VkFormat format : candidates) {
+      VkFormatProperties props;
+      vkGetPhysicalDeviceFormatProperties(mPhysicalDevice, format, &props);
+      if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) return format;
+      else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) return format;
+    }
+
+    PURR_ASSERT(false, "Failed to find supported format!");
+    return VK_FORMAT_UNDEFINED;
+  }
+
+  VkFormat vkRenderer::getDepthFormat() {
+    if (mDepthFormat == VK_FORMAT_UNDEFINED) 
+      mDepthFormat = findSupportedFormat(
+        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+      );
+    return mDepthFormat;
   }
 
   bool vkRenderer::CheckLayerSupport(std::vector<const char *> layers) {

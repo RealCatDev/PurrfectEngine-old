@@ -46,14 +46,14 @@ namespace PurrfectEngine {
       mCameraSet = mDescriptors->allocate(mCameraLayout);
 
       mRenderPass = new vkRenderPass(mRenderer);
-      auto attachment = vkRenderPass::attachmnetInfo();
+      auto attachment = vkRenderPass::attachmentInfo();
       attachment.format = VK_FORMAT_B8G8R8A8_UNORM;
       mRenderPass->addAttachment(attachment);
       mRenderPass->initialize();
 
       mSceneRenderPass = new vkRenderPass(mRenderer);
       {
-        attachment = vkRenderPass::attachmnetInfo();
+        attachment = vkRenderPass::attachmentInfo();
         attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
         attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachment.msaaSamples = true;
@@ -61,7 +61,17 @@ namespace PurrfectEngine {
       }
       
       {
-        attachment = vkRenderPass::attachmnetInfo();
+        attachment = vkRenderPass::attachmentInfo();
+        attachment.format = mRenderer->getDepthFormat();
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachment.msaaSamples = true;
+        mSceneRenderPass->addAttachment(attachment);
+      }
+
+      {
+        attachment = vkRenderPass::attachmentInfo();
         attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
         attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -189,15 +199,21 @@ namespace PurrfectEngine {
     void CreateScene() {
       mSceneImages.clear();
       mSceneResolveImages.clear();
+      mSceneDepthImages.clear();
       mSceneFramebuffers.clear();
       for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         vkTexture *resolveTexture = new vkTexture(mRenderer);
         vkTexture *texture = new vkTexture(mRenderer);
+        vkTexture *depthTexture = new vkTexture(mRenderer);
         auto fb = new vkFramebuffer(mRenderer);
         fb->setRenderPass(mSceneRenderPass);
         {
           resolveTexture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
           fb->addAttachment(resolveTexture->getView());
+        }
+        {
+          depthTexture->initialize(mCommands, mDescriptors, mRenderer->getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
+          fb->addAttachment(depthTexture->getView());
         }
         {
           texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false);
@@ -208,6 +224,7 @@ namespace PurrfectEngine {
         
         mSceneImages.push_back(texture);
         mSceneResolveImages.push_back(resolveTexture);
+        mSceneDepthImages.push_back(depthTexture);
         mSceneFramebuffers.push_back(fb);
       }
 
@@ -217,6 +234,7 @@ namespace PurrfectEngine {
       mPipeline->addDescriptor(getTextureLayout());
       mPipeline->setVertexBind(MeshVertex::getBindingDescription());
       mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
+      mPipeline->enableDepthStencil(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
 
       auto vertBuf = new vkShader(mRenderer);
       auto fragBuf = new vkShader(mRenderer);
@@ -230,6 +248,7 @@ namespace PurrfectEngine {
     void CleanupScene() {
       for (size_t i = 0; i < mSceneImages.size(); ++i)        delete mSceneImages[i];
       for (size_t i = 0; i < mSceneResolveImages.size(); ++i) delete mSceneResolveImages[i];
+      for (size_t i = 0; i < mSceneDepthImages.size(); ++i)   delete mSceneDepthImages[i];
       for (size_t i = 0; i < mSceneFramebuffers.size(); ++i)  delete mSceneFramebuffers[i];
       delete mPipeline;
     }
@@ -253,9 +272,13 @@ namespace PurrfectEngine {
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = mSceneExtent;
 
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
+        std::vector<VkClearValue> clearValues(3);
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[1].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+        clearValues[2].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -400,6 +423,7 @@ namespace PurrfectEngine {
 
     std::vector<vkTexture*>     mSceneImages{};
     std::vector<vkTexture*>     mSceneResolveImages{};
+    std::vector<vkTexture*>     mSceneDepthImages{};
     std::vector<vkFramebuffer*> mSceneFramebuffers{};
 
     vkPipeline      *mPipeline  = nullptr;
