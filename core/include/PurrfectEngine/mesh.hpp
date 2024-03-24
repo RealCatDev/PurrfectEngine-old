@@ -4,7 +4,6 @@
 #include "PurrfectEngine/core.hpp"
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 
 namespace PurrfectEngine {
 
@@ -54,13 +53,19 @@ namespace PurrfectEngine {
     }
   };
 
+  struct vkSubMesh {
+    unsigned int NumIndices;
+    unsigned int Vertex;
+    unsigned int Index;
+  };
+
   class vkRenderer;
   class vkBuffer;
   class vkCommandPool;
   class vkMesh {
   public:
     vkMesh(vkRenderer *renderer);
-    vkMesh(vkRenderer *renderer, std::vector<MeshVertex> vertices, std::vector<uint32_t> indices);
+    vkMesh(vkRenderer *renderer, std::vector<MeshVertex> vertices, std::vector<uint32_t> indices, std::vector<vkSubMesh> submeshes);
     ~vkMesh();
 
     void initialize(vkCommandPool *pool);
@@ -69,13 +74,15 @@ namespace PurrfectEngine {
 
     void setVertices(std::vector<MeshVertex> arr) { mVertices = arr; }
     void setIndices(std::vector<uint32_t> arr)    { mIndices = arr; }
+    void addSubMesh(vkSubMesh subMesh)            { mSubMeshes.push_back(subMesh); }
   private:
     vkRenderer *mRenderer = nullptr;
   private:
-    vkBuffer *mVBuf = nullptr;
-    vkBuffer *mIBuf = nullptr;
     std::vector<MeshVertex> mVertices; 
     std::vector<uint32_t>   mIndices;
+    std::vector<vkSubMesh>  mSubMeshes;
+    vkBuffer *mVBuf = nullptr;
+    vkBuffer *mIBuf = nullptr;
   };
 
 }

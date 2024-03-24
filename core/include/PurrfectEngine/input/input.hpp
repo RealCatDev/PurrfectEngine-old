@@ -1,10 +1,10 @@
 #ifndef PURRENGINE_INPUT_INPUT_HPP_
 #define PURRENGINE_INPUT_INPUT_HPP_
 
+#include "PurrfectEngine/core.hpp"
 #include "PurrfectEngine/input/inputDefines.hpp"
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 #include <unordered_map>
 

@@ -16,27 +16,30 @@ namespace PurrfectEngine {
 
   }
 
-  bool modelLoader::load(const char *filename, vkCommandPool *cmdPool, vkModel **model) {
+  vkMesh *modelLoader::load(const char *filename, vkCommandPool *cmdPool) {
     auto dis = sInstance;
 
     Assimp::Importer importer;
 
     const aiScene *scene = importer.ReadFile(filename, ASSIMP_LOAD_FLAGS);
-    if (!scene) return false;
-    *model = new vkModel(dis->mRenderer);
+    if (!scene) return nullptr;
+    vkMesh *mesh = new vkMesh(dis->mRenderer);
     {
-      std::vector<vkMesh*> meshes(scene->mNumMeshes);
       uint32_t vertexCount = 0;
       uint32_t indexCount  = 0;
 
-      for (size_t i = 0; i < meshes.size(); ++i) {
-        meshes[i] = new vkMesh(dis->mRenderer);
+      std::vector<MeshVertex> vertices{};
+      std::vector<uint32_t> indices{};
+
+      for (size_t i = 0; i < scene->mNumMeshes; ++i) {
         const aiMesh *pMesh = scene->mMeshes[i];
+        vkSubMesh smesh = {};
+        smesh.NumIndices = pMesh->mNumFaces * 3;
+        smesh.Vertex     = vertexCount;  vertexCount += pMesh->mNumVertices;
+        smesh.Index      = indexCount;   indexCount  += smesh.NumIndices;
+        mesh->addSubMesh(smesh);
 
         const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
-
-        std::vector<MeshVertex> vertices{};
-        std::vector<uint32_t> indices{};
 
         for (unsigned int i = 0; i < pMesh->mNumVertices; i++) {
           MeshVertex vert{};
@@ -64,16 +67,14 @@ namespace PurrfectEngine {
           indices.push_back(face.mIndices[1]);
           indices.push_back(face.mIndices[2]);
         }
-
-        meshes[i]->setVertices(vertices);
-        meshes[i]->setIndices(indices);
-        meshes[i]->initialize(cmdPool);
       }
 
-      (*model)->setMeshes(meshes);
+      mesh->setVertices(vertices);
+      mesh->setIndices(indices);
     }
+    mesh->initialize(cmdPool);
 
-    return true;
+    return mesh;
   }
 
   void modelLoader::save(const char *filename) {

@@ -3,6 +3,7 @@
 
 #include <PurrfectEngine/renderer.hpp>
 #include <PurrfectEngine/camera.hpp>
+#include <PurrfectEngine/loaders.hpp>
 #include <PurrfectEngine/imgui.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -111,6 +112,8 @@ namespace PurrfectEngine {
       mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
       mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
+
+      (void)new modelLoader(mRenderer);
     }
 
     void render() {
@@ -143,11 +146,9 @@ namespace PurrfectEngine {
 
     void setScene(purrScene *scene) { mScene = scene; }
 
-    PurrfectEngine::vkMesh *createMesh(std::vector<MeshVertex> vertices, std::vector<uint32_t> indices) {
-      auto mesh = new vkMesh(mRenderer,
-        vertices, indices
-      );
-      mesh->initialize(mCommands);
+    PurrfectEngine::vkMesh *createMesh(const char *filepath) {
+      vkMesh *mesh = PurrfectEngine::modelLoader::load(filepath, mCommands);
+      PURR_ASSERT(mesh, "Failed to load mesh!");
       return mesh;
     }
   private:
@@ -274,8 +275,8 @@ namespace PurrfectEngine {
 
         std::vector<VkClearValue> clearValues(3);
         clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        clearValues[1].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-        clearValues[2].depthStencil = {1.0f, 0};
+        clearValues[1].depthStencil = {1.0f, 0};
+        clearValues[2].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();

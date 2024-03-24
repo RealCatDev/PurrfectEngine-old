@@ -1,7 +1,7 @@
 #ifndef PURRENGINE_TRANSFORM_HPP_
 #define PURRENGINE_TRANSFORM_HPP_
 
-#include <glm/glm.hpp>
+#include "PurrfectEngine/core.hpp"
 
 namespace PurrfectEngine {
 

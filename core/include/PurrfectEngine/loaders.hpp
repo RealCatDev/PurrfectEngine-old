@@ -3,7 +3,7 @@
 
 #include "PurrfectEngine/core.hpp"
 #include "PurrfectEngine/renderer.hpp"
-#include "PurrfectEngine/model.hpp"
+#include "PurrfectEngine/mesh.hpp"
 
 namespace PurrfectEngine {
 
@@ -12,7 +12,7 @@ namespace PurrfectEngine {
     modelLoader(vkRenderer *renderer);
     ~modelLoader();
   public:
-    static bool load(const char *filename, vkCommandPool *cmdPool, vkModel **model);
+    static vkMesh *load(const char *filename, vkCommandPool *cmdPool);
     static void save(const char *filename);
   private:
     vkRenderer *mRenderer = nullptr;

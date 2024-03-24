@@ -7,8 +7,8 @@ namespace PurrfectEngine {
     mRenderer(renderer), mVertices(), mIndices()
   {}
   
-  vkMesh::vkMesh(vkRenderer *renderer, std::vector<MeshVertex> vertices, std::vector<uint32_t> indices):
-    mRenderer(renderer), mVertices(vertices), mIndices(indices)
+  vkMesh::vkMesh(vkRenderer *renderer, std::vector<MeshVertex> vertices, std::vector<uint32_t> indices, std::vector<vkSubMesh> submeshes):
+    mRenderer(renderer), mVertices(vertices), mIndices(indices), mSubMeshes(submeshes)
   {}
   
   vkMesh::~vkMesh() {

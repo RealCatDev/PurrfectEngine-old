@@ -4,7 +4,6 @@
 #include "PurrfectEngine/core.hpp"
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 
 namespace PurrfectEngine {
 
