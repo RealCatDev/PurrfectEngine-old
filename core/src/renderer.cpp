@@ -104,7 +104,7 @@ namespace PurrfectEngine {
     auto support = mRenderer->QuerySwapChainSupport(mRenderer->mPhysicalDevice);
     auto availablePresentModes = support.presentModes;
     for (const auto &mode : requestedPresentModes) 
-      if (std::find(availablePresentModes.begin(), availablePresentModes.end(), mode) != availablePresentModes.end()) mPresentMode = mode;
+      if (std::find(availablePresentModes.begin(), availablePresentModes.end(), mode) != availablePresentModes.end()) { mPresentMode = mode; return; }
     mPresentMode = VK_PRESENT_MODE_FIFO_KHR;
   }
 
