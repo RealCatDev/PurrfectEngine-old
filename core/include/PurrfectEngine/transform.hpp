@@ -27,9 +27,9 @@ namespace PurrfectEngine {
     glm::vec3 getRotation() const { return mRot; }
     glm::vec3 getScale   () const { return mScl; }
 
-    void getPosition(glm::vec3 v) { mPos = v; }
-    void getRotation(glm::vec3 v) { mRot = v; }
-    void getScale   (glm::vec3 v) { mScl = v; }
+    void setPosition(glm::vec3 v) { mPos = v; }
+    void setRotation(glm::vec3 v) { mRot = v; }
+    void setScale   (glm::vec3 v) { mScl = v; }
 
     const glm::vec3 getForward() const {
       return glm::vec3(sin(mRot.y), -tan(mRot.x), cos(mRot.y));

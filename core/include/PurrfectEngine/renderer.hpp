@@ -83,6 +83,9 @@ namespace PurrfectEngine {
 
     void setRenderPass(vkRenderPass *renderPass) { mRenderPass = renderPass; }
 
+    void enableMSAA() { mMsaa = true; }
+    void setCulling(VkFrontFace frontFace, VkCullModeFlagBits cullMode) { mFrontFace = frontFace; mCullMode = cullMode; }
+
     void initialize();
 
     VkPipeline get() const { return mPipeline; }
@@ -100,6 +103,11 @@ namespace PurrfectEngine {
 
     VkPipelineDepthStencilStateCreateInfo mDepthStencil;
     bool                                  mDepthStencilEnable = false;
+
+    VkFrontFace mFrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    VkCullModeFlagBits mCullMode = VK_CULL_MODE_BACK_BIT;
+
+    bool mMsaa = false;
 
     VkPipelineLayout mLayout;
     VkPipeline       mPipeline;

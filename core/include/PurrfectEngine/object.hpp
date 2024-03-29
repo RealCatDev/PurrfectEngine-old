@@ -11,7 +11,7 @@ namespace PurrfectEngine {
   public:
     purrObject(const char *name) 
       : mName(name), mUUID(new UUID())
-    {}
+    { addComponent(new transformComponent(new purrTransform())); }
 
     ~purrObject() {
       for (auto com : mComponents) delete com;

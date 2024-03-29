@@ -16,10 +16,9 @@ int main (int argc, char **argv) {
 
   PurrfectEngine::purrScene *scene = new PurrfectEngine::purrScene();
   {
-    auto mesh = renderer->createMesh(PurrfectEngine::Asset("models/cube.fbx"));
+    auto mesh = renderer->createMesh(PurrfectEngine::Asset("models/teapot.obj"));
 
     auto obj = new PurrfectEngine::purrObject("meow");
-    PurrfectEngine::purrTransform *trans = (PurrfectEngine::purrTransform*)obj->getComponent("transform");
     obj->addComponent(new PurrfectEngine::meshComponent(mesh));
     scene->addObject(obj);
   }

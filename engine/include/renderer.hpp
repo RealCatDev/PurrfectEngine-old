@@ -52,33 +52,35 @@ namespace PurrfectEngine {
       mRenderPass->addAttachment(attachment);
       mRenderPass->initialize();
 
-      mSceneRenderPass = new vkRenderPass(mRenderer);
       {
-        attachment = vkRenderPass::attachmentInfo();
-        attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        attachment.msaaSamples = true;
-        mSceneRenderPass->addAttachment(attachment);
-      }
-      
-      {
-        attachment = vkRenderPass::attachmentInfo();
-        attachment.format = mRenderer->getDepthFormat();
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        attachment.msaaSamples = true;
-        mSceneRenderPass->addAttachment(attachment);
-      }
+        mSceneRenderPass = new vkRenderPass(mRenderer);
+        {
+          attachment = vkRenderPass::attachmentInfo();
+          attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+          attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+          attachment.msaaSamples = true;
+          mSceneRenderPass->addAttachment(attachment);
+        }
+        
+        {
+          attachment = vkRenderPass::attachmentInfo();
+          attachment.format = mRenderer->getDepthFormat();
+          attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+          attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+          attachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+          attachment.msaaSamples = true;
+          mSceneRenderPass->addAttachment(attachment);
+        }
 
-      {
-        attachment = vkRenderPass::attachmentInfo();
-        attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        mSceneRenderPass->addAttachmentResolve(attachment);
+        {
+          attachment = vkRenderPass::attachmentInfo();
+          attachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+          attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+          attachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+          mSceneRenderPass->addAttachmentResolve(attachment);
+        }
+        mSceneRenderPass->initialize();
       }
-      mSceneRenderPass->initialize();
 
       mRenderer->setSizeCallback([this](){ Resize(); });
       mRenderer->setResizeCheck([this]() {
@@ -98,6 +100,16 @@ namespace PurrfectEngine {
 
       mSceneExtent = { 1920, 1080 };
       CreateSwapchain();
+      {
+        mHdrRenderPass = new vkRenderPass(mRenderer);
+        {
+          attachment = vkRenderPass::attachmentInfo();
+          attachment.format = mSwapchain->getFormat();
+          attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+          mHdrRenderPass->addAttachment(attachment);
+        }
+        mHdrRenderPass->initialize();
+      }
       CreateScene();
 
       mImGuiDescriptors = new vkDescriptorPool(mRenderer);
@@ -198,60 +210,97 @@ namespace PurrfectEngine {
     }
 
     void CreateScene() {
+      mHdrImages.clear();
+      mHdrFramebuffers.clear();
       mSceneImages.clear();
       mSceneResolveImages.clear();
       mSceneDepthImages.clear();
       mSceneFramebuffers.clear();
       for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        vkTexture *resolveTexture = new vkTexture(mRenderer);
-        vkTexture *texture = new vkTexture(mRenderer);
-        vkTexture *depthTexture = new vkTexture(mRenderer);
-        auto fb = new vkFramebuffer(mRenderer);
-        fb->setRenderPass(mSceneRenderPass);
         {
-          resolveTexture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
-          fb->addAttachment(resolveTexture->getView());
+          vkTexture *resolveTexture = new vkTexture(mRenderer);
+          vkTexture *texture = new vkTexture(mRenderer);
+          vkTexture *depthTexture = new vkTexture(mRenderer);
+          auto fb = new vkFramebuffer(mRenderer);
+          fb->setRenderPass(mSceneRenderPass);
+          {
+            resolveTexture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
+            fb->addAttachment(resolveTexture->getView());
+          }
+          {
+            depthTexture->initialize(mCommands, mDescriptors, mRenderer->getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
+            fb->addAttachment(depthTexture->getView());
+          }
+          {
+            texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false);
+            fb->addAttachment(texture->getView());
+          }
+          fb->setExtent(mSceneExtent);
+          fb->initialize();
+          
+          mSceneImages.push_back(texture);
+          mSceneResolveImages.push_back(resolveTexture);
+          mSceneDepthImages.push_back(depthTexture);
+          mSceneFramebuffers.push_back(fb);
         }
+
         {
-          depthTexture->initialize(mCommands, mDescriptors, mRenderer->getDepthFormat(), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false, true, false);
-          fb->addAttachment(depthTexture->getView());
-        }
-        {
-          texture->initialize(mCommands, mDescriptors, VK_FORMAT_R16G16B16A16_SFLOAT, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false);
+          vkTexture *texture = new vkTexture(mRenderer);
+          texture->initialize(mCommands, mDescriptors, mSwapchain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, mSceneExtent.width, mSceneExtent.height, false);
+          mHdrImages.push_back(texture);
+          auto fb = new vkFramebuffer(mRenderer);
+          fb->setRenderPass(mHdrRenderPass);
           fb->addAttachment(texture->getView());
+          fb->setExtent(mSceneExtent);
+          fb->initialize();
+          mHdrFramebuffers.push_back(fb);
         }
-        fb->setExtent(mSceneExtent);
-        fb->initialize();
-        
-        mSceneImages.push_back(texture);
-        mSceneResolveImages.push_back(resolveTexture);
-        mSceneDepthImages.push_back(depthTexture);
-        mSceneFramebuffers.push_back(fb);
       }
 
-      mPipeline = new vkPipeline(mRenderer);
-      mPipeline->setRenderPass(mSceneRenderPass);
-      mPipeline->addDescriptor(mCameraLayout);
-      mPipeline->addDescriptor(getTextureLayout());
-      mPipeline->setVertexBind(MeshVertex::getBindingDescription());
-      mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
-      mPipeline->enableDepthStencil(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
+      { // lit pipeline
+        mPipeline = new vkPipeline(mRenderer);
+        mPipeline->setRenderPass(mSceneRenderPass);
+        mPipeline->addDescriptor(mCameraLayout);
+        mPipeline->addDescriptor(getTextureLayout());
+        mPipeline->setVertexBind(MeshVertex::getBindingDescription());
+        mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
+        mPipeline->enableDepthStencil(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
 
-      auto vertBuf = new vkShader(mRenderer);
-      auto fragBuf = new vkShader(mRenderer);
-      vertBuf->load(Asset("shaders/vert.spv"));
-      fragBuf->load(Asset("shaders/frag.spv"));
-      mPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertBuf);
-      mPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragBuf);
-      mPipeline->initialize();
+        auto vertShader = new vkShader(mRenderer);
+        auto fragShader = new vkShader(mRenderer);
+        vertShader->load(Asset("shaders/vert.spv"));
+        fragShader->load(Asset("shaders/frag.spv"));
+        mPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertShader);
+        mPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragShader);
+        mPipeline->enableMSAA();
+        mPipeline->initialize();
+      }
+
+      { // hdr pipeline
+        mHdrPipeline = new vkPipeline(mRenderer);
+        mHdrPipeline->setRenderPass(mHdrRenderPass);
+        mHdrPipeline->addDescriptor(getTextureLayout());
+
+        auto vertShader = new vkShader(mRenderer);
+        auto fragShader = new vkShader(mRenderer);
+        vertShader->load(Asset("shaders/plane.spv"));
+        fragShader->load(Asset("shaders/hdr.spv"));
+        mHdrPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertShader);
+        mHdrPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragShader);
+        mHdrPipeline->setCulling(VK_FRONT_FACE_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
+        mHdrPipeline->initialize();
+      }
     }
 
     void CleanupScene() {
+      for (size_t i = 0; i < mHdrImages.size(); ++i)          delete mHdrImages[i];
+      for (size_t i = 0; i < mHdrFramebuffers.size(); ++i)    delete mHdrFramebuffers[i];
       for (size_t i = 0; i < mSceneImages.size(); ++i)        delete mSceneImages[i];
       for (size_t i = 0; i < mSceneResolveImages.size(); ++i) delete mSceneResolveImages[i];
       for (size_t i = 0; i < mSceneDepthImages.size(); ++i)   delete mSceneDepthImages[i];
       for (size_t i = 0; i < mSceneFramebuffers.size(); ++i)  delete mSceneFramebuffers[i];
       delete mPipeline;
+      delete mHdrPipeline;
     }
 
     void ResizeScene() {
@@ -309,6 +358,44 @@ namespace PurrfectEngine {
             meshCmp->get()->render(cmdBuf);
           }
         }
+
+        vkCmdEndRenderPass(cmdBuf);
+      }
+
+      {
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = mHdrRenderPass->get();
+        renderPassInfo.framebuffer = mHdrFramebuffers[mRenderer->frame()]->get();
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = mSceneExtent;
+
+        std::vector<VkClearValue> clearValues(1);
+        clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(cmdBuf, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float) mSceneExtent.width;
+        viewport.height = (float) mSceneExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(cmdBuf, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = mSceneExtent;
+        vkCmdSetScissor(cmdBuf, 0, 1, &scissor);
+
+        vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mHdrPipeline->get());
+
+        mSceneImages[mRenderer->frame()]->bind(cmdBuf, mHdrPipeline, 0);
+        vkCmdDraw(cmdBuf, 6, 1, 0, 0);
 
         vkCmdEndRenderPass(cmdBuf);
       }
@@ -388,7 +475,7 @@ namespace PurrfectEngine {
         mSceneResized = true;
         mSceneExtent = { static_cast<uint32_t>(regAval.x), static_cast<uint32_t>(regAval.y) };
       }
-      ImGui::Image(mSceneImages[mRenderer->frame()]->getSet(), { static_cast<float>(mSceneExtent.width), static_cast<float>(mSceneExtent.height) });
+      ImGui::Image(mHdrImages[mRenderer->frame()]->getSet(), { static_cast<float>(mSceneExtent.width), static_cast<float>(mSceneExtent.height) });
 
       ImGui::End();
       ImGui::PopStyleVar();
@@ -422,12 +509,17 @@ namespace PurrfectEngine {
     VkExtent2D       mSceneExtent = {};
     bool             mSceneResized = false;
 
+    vkRenderPass               *mHdrRenderPass = nullptr;
+    std::vector<vkTexture*>     mHdrImages{};
+    std::vector<vkFramebuffer*> mHdrFramebuffers{};
+
     std::vector<vkTexture*>     mSceneImages{};
     std::vector<vkTexture*>     mSceneResolveImages{};
     std::vector<vkTexture*>     mSceneDepthImages{};
     std::vector<vkFramebuffer*> mSceneFramebuffers{};
 
     vkPipeline      *mPipeline  = nullptr;
+    vkPipeline      *mHdrPipeline  = nullptr;
 
     vkBuffer        *mCameraBuf = nullptr;
     vkDescriptorSet *mCameraSet = nullptr;
