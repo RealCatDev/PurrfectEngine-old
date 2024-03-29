@@ -53,6 +53,11 @@ namespace PurrfectEngine {
     }
   };
 
+  struct vkModelPC {
+    glm::mat4 model;
+    glm::mat4 normal;
+  };
+
   struct vkSubMesh {
     unsigned int NumIndices;
     unsigned int Vertex;

@@ -78,6 +78,13 @@ namespace PurrfectEngine {
     void setVertexBind(VkVertexInputBindingDescription x) { mVertexBindingDescription = &x; }
     void addShader(VkShaderStageFlagBits stage, vkShader *shader);
     void addDescriptor(vkDescriptorLayout *layout) { mDescriptors.push_back(layout); }
+    void addPushConstant(uint32_t offset, uint32_t size, VkShaderStageFlagBits stage) { 
+      VkPushConstantRange range{};
+      range.stageFlags = stage;
+      range.offset = offset;
+      range.size = size;
+      mPushConstants.push_back(range); 
+    }
 
     void enableDepthStencil(VkBool32 testEnable, VkBool32 writeEnable, VkCompareOp compareOp, VkBool32 boundsTestEnable, VkBool32 stencilTestEnable);
 
@@ -88,7 +95,8 @@ namespace PurrfectEngine {
 
     void initialize();
 
-    VkPipeline get() const { return mPipeline; }
+    VkPipelineLayout getLayout() const { return mLayout; }
+    VkPipeline       get()       const { return mPipeline; }
   private:
     vkRenderer   *mRenderer   = nullptr;
     vkRenderPass *mRenderPass = nullptr;
@@ -100,6 +108,7 @@ namespace PurrfectEngine {
     VkVertexInputBindingDescription               *mVertexBindingDescription = nullptr;
 
     std::vector<vkDescriptorLayout*>               mDescriptors{};
+    std::vector<VkPushConstantRange>               mPushConstants{};
 
     VkPipelineDepthStencilStateCreateInfo mDepthStencil;
     bool                                  mDepthStencilEnable = false;
@@ -219,7 +228,8 @@ namespace PurrfectEngine {
 
     void copy(vkCommandPool *pool, vkBuffer *src);
 
-    VkBuffer get() const { return mBuffer; }
+    VkBuffer get()  const { return mBuffer; }
+    void *getData() const { return mData; }
   private:
     vkRenderer* mRenderer = nullptr;
   private:
@@ -256,7 +266,7 @@ namespace PurrfectEngine {
   public:
     ~vkDescriptorSet();
 
-    void write(vkBuffer *buffer, uint32_t binding = 0);
+    void write(vkBuffer *buffer, uint32_t binding = 0, VkDescriptorType type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     void write(VkImageLayout layout, VkImageView view, VkSampler sampler, uint32_t binding = 0);
     void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 0);
 

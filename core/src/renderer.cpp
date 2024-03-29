@@ -226,8 +226,8 @@ namespace PurrfectEngine {
     
     pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
     pipelineLayoutInfo.pSetLayouts = layouts.data();
-    pipelineLayoutInfo.pushConstantRangeCount = 0;
-    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(mPushConstants.size());
+    pipelineLayoutInfo.pPushConstantRanges = mPushConstants.data();
   
     CHECK_VK(vkCreatePipelineLayout(mRenderer->mDevice, &pipelineLayoutInfo, nullptr, &mLayout));
 
@@ -719,7 +719,7 @@ namespace PurrfectEngine {
 
   vkDescriptorSet::~vkDescriptorSet() {}
 
-  void vkDescriptorSet::write(vkBuffer *buffer, uint32_t binding) {
+  void vkDescriptorSet::write(vkBuffer *buffer, uint32_t binding, VkDescriptorType type) {
     VkDescriptorBufferInfo bufferInfo{};
     bufferInfo.buffer = buffer->mBuffer;
     bufferInfo.offset = 0;
@@ -730,7 +730,7 @@ namespace PurrfectEngine {
     descriptorWrite.dstSet = mSet;
     descriptorWrite.dstBinding = binding;
     descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // TODO(CatDev): Fix
+    descriptorWrite.descriptorType = type;
     descriptorWrite.descriptorCount = 1;
     descriptorWrite.pBufferInfo = &bufferInfo;
     descriptorWrite.pImageInfo = nullptr;

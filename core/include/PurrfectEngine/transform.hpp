@@ -3,6 +3,8 @@
 
 #include "PurrfectEngine/core.hpp"
 
+#include <glm/gtc/matrix_inverse.hpp>
+
 namespace PurrfectEngine {
 
   class purrTransform {
@@ -49,6 +51,10 @@ namespace PurrfectEngine {
       glm::vec3 right = getRight();
 
       return glm::normalize(glm::cross(forward, right));
+    }
+
+    const glm::mat3 getNormal() {
+      return glm::inverseTranspose(glm::mat3(getTransform()));
     }
   private:
     glm::mat4 mTransform;

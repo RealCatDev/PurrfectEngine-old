@@ -3,6 +3,8 @@
 
 #include <PurrfectEngine/renderer.hpp>
 #include <PurrfectEngine/camera.hpp>
+#include <PurrfectEngine/mesh.hpp>
+#include <PurrfectEngine/light.hpp>
 #include <PurrfectEngine/loaders.hpp>
 #include <PurrfectEngine/imgui.hpp>
 
@@ -34,6 +36,12 @@ namespace PurrfectEngine {
         0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
       });
       mCameraLayout->initialize();
+      
+      mLightsLayout = new vkDescriptorLayout(mRenderer);
+      mLightsLayout->addBinding({
+        0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+      });
+      mLightsLayout->initialize();
 
       mCommands = new vkCommandPool(mRenderer);
       mCommands->initialize();
@@ -45,6 +53,7 @@ namespace PurrfectEngine {
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2048 }
       });
       mCameraSet = mDescriptors->allocate(mCameraLayout);
+      mLightsSet = mDescriptors->allocate(mLightsLayout);
 
       mRenderPass = new vkRenderPass(mRenderer);
       auto attachment = vkRenderPass::attachmentInfo();
@@ -98,6 +107,13 @@ namespace PurrfectEngine {
 
       mCameraSet->write(mCameraBuf);
 
+      mLights.push_back({
+        glm::vec4(0.0f, 0.0f, 2.0f, 0.0f),
+        glm::vec4(1.0f, 0.0f, 0.0f, 10.0f),
+        glm::vec4(1.0f, 1.0f, 1.0f, 0.2f)
+      });
+      CreateLightsBuf();
+
       mSceneExtent = { 1920, 1080 };
       CreateSwapchain();
       {
@@ -145,8 +161,10 @@ namespace PurrfectEngine {
       delete mImGui;
 
       delete mCameraLayout;
+      delete mLightsLayout;
       destroyTextureLayout(); // destroy texture layout
 
+      delete mLightsBuf;
       delete mCameraBuf;
       delete mTexture;
       delete mCommands;
@@ -164,6 +182,32 @@ namespace PurrfectEngine {
       return mesh;
     }
   private:
+    void CreateLightsBuf() {
+      int lightCount = static_cast<int>(mLights.size());
+      VkDeviceSize size = (sizeof(int)*4) + (sizeof(vkLight) * lightCount);
+      auto stagingBuf = new vkBuffer(mRenderer);
+      stagingBuf->initialize(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+      stagingBuf->mapMemory();
+        void* data = stagingBuf->getData();
+        memcpy(data, &lightCount, sizeof(int)*4);
+        memcpy(&(((char*)data)[4* sizeof(int)]), mLights.data(), (sizeof(vkLight)*lightCount));
+      stagingBuf->unmapMemory();
+
+      mLightsBuf = new vkBuffer(mRenderer);
+      mLightsBuf->initialize(size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      mLightsBuf->copy(mCommands, stagingBuf);
+
+      delete stagingBuf;
+
+      mLightsSet->write(mLightsBuf, 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    }
+
+    void RecreateLightsBuf() {
+      delete mLightsBuf;
+      CreateLightsBuf();
+    }
+
     void Update() {
       auto extnt = mSwapchain->getExtent();
       mCamera->calculate({ extnt.width, extnt.height });
@@ -262,6 +306,8 @@ namespace PurrfectEngine {
         mPipeline->setRenderPass(mSceneRenderPass);
         mPipeline->addDescriptor(mCameraLayout);
         mPipeline->addDescriptor(getTextureLayout());
+        mPipeline->addDescriptor(mLightsLayout);
+        mPipeline->addPushConstant(0, sizeof(glm::mat4)*2, VK_SHADER_STAGE_VERTEX_BIT);
         mPipeline->setVertexBind(MeshVertex::getBindingDescription());
         mPipeline->setVertexAttrs(MeshVertex::getAttributeDescriptions());
         mPipeline->enableDepthStencil(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
@@ -272,6 +318,7 @@ namespace PurrfectEngine {
         fragShader->load(Asset("shaders/frag.spv"));
         mPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertShader);
         mPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragShader);
+        mPipeline->setCulling(VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
         mPipeline->enableMSAA();
         mPipeline->initialize();
       }
@@ -351,9 +398,18 @@ namespace PurrfectEngine {
         if (mScene) {
           mCameraSet->bind(cmdBuf, mPipeline);
           mTexture->bind(cmdBuf, mPipeline); // Default texture
+          mLightsSet->bind(cmdBuf, mPipeline, 2);
 
           for (auto obj : mScene->getObjects()) {
             if (!obj->hasComponent("Mesh")) continue;
+            transformComponent *transform = (transformComponent*) obj->getComponent("Transform");
+            PURR_ASSERT(transform, "Transform is required to render game object!");
+
+            vkModelPC pc{};
+            pc.model = transform->get()->getTransform();
+            pc.normal = glm::mat4(transform->get()->getNormal());
+            vkCmdPushConstants(cmdBuf, mPipeline->getLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(vkModelPC), &pc);
+
             meshComponent *meshCmp = (meshComponent*) obj->getComponent("Mesh");
             meshCmp->get()->render(cmdBuf);
           }
@@ -493,6 +549,7 @@ namespace PurrfectEngine {
     vkDescriptorPool *mDescriptors = nullptr;
 
     vkDescriptorLayout *mCameraLayout = nullptr;
+    vkDescriptorLayout *mLightsLayout = nullptr;
 
     vkRenderPass *mRenderPass = nullptr;
     std::vector<vkFramebuffer*> mFramebuffers{};
@@ -526,9 +583,14 @@ namespace PurrfectEngine {
     vkMesh          *mMesh      = nullptr;
     vkTexture       *mTexture   = nullptr;
 
+    vkBuffer        *mLightsBuf = nullptr;
+    vkDescriptorSet *mLightsSet = nullptr;
+
     purrCamera      *mCamera    = nullptr;
 
     purrScene       *mScene     = nullptr;
+
+    std::vector<vkLight> mLights;
   private: // ImGui stuff
     bool mSceneWndoOpen = true;
   };
