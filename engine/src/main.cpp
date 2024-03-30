@@ -1,3 +1,4 @@
+#define PURR_DEBUG
 #include <PurrfectEngine/scene.hpp>
 
 #include "renderer.hpp"

@@ -110,8 +110,7 @@ namespace PurrfectEngine {
       mCameraBuf = new vkBuffer(mRenderer);
       mCameraBuf->initialize(sizeof(CameraUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
       mCameraBuf->mapMemory();
-
-      mCameraSet->write(mCameraBuf);
+        mCameraSet->write(mCameraBuf);
 
       mLights.push_back({
         glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
