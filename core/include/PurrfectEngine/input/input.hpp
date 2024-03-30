@@ -14,7 +14,7 @@ namespace Input {
 
     class input {
     public:
-        input(::PurrfectEngine::window *win);
+        input(window *win);
         ~input();
 
         bool isKeyPressed(keyBinds key);

@@ -6,11 +6,11 @@ namespace PurrfectEngine {
   struct vkLight {
     glm::vec4 pos;
     glm::vec4 col;
-    glm::vec4 ambient;
   };
 
   struct vkLights {
     int lightCount;
+    glm::vec4 ambient;
     vkLight *lights;
   };
 

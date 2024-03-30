@@ -3,6 +3,7 @@
 layout(binding = 0) uniform CameraUBO {
   mat4 proj;
   mat4 view;
+  vec4 pos;
 } cam;
 
 layout (location = 0) in vec3 inPos;
@@ -14,17 +15,7 @@ layout (location = 0) out vec3 outColr;
 layout (location = 1) out vec2 outUV;
 layout (location = 2) out vec3 outPosWorld;
 layout (location = 3) out vec3 outNrmlWorld;
-
-struct Light {
-  vec4 pos;
-  vec4 col;
-  vec4 ambient;
-};
-
-layout (std140,set = 2, binding = 0) readonly buffer LightBuffer{
-	int lightsCount;
-	Light lights[];
-} lightBuffer;
+layout (location = 4) out vec3 outNormal;
 
 layout( push_constant ) uniform constants {
   mat4 model;
@@ -40,4 +31,5 @@ void main() {
   outUV   = inUV;
   outPosWorld = worldPos.xyz;
   outNrmlWorld = normalize(mat3(pc.normal) * inNrml);
+  outNormal = inNrml;
 }

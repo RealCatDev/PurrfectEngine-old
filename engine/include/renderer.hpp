@@ -7,6 +7,7 @@
 #include <PurrfectEngine/light.hpp>
 #include <PurrfectEngine/loaders.hpp>
 #include <PurrfectEngine/imgui.hpp>
+#include <PurrfectEngine/material.hpp>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -30,16 +31,17 @@ namespace PurrfectEngine {
       mRenderer->initialize();
 
       (void)getTextureLayout(mRenderer);
+      (void)getMaterialLayout(mRenderer);
 
       mCameraLayout = new vkDescriptorLayout(mRenderer);
       mCameraLayout->addBinding({
-        0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
       });
       mCameraLayout->initialize();
       
       mLightsLayout = new vkDescriptorLayout(mRenderer);
       mLightsLayout->addBinding({
-        0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
       });
       mLightsLayout->initialize();
 
@@ -50,8 +52,12 @@ namespace PurrfectEngine {
       mDescriptors = new vkDescriptorPool(mRenderer);
       mDescriptors->initialize({
         { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 },
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2048 }
       });
+
+      vkTexture::initializeBlank(mRenderer, mCommands, mDescriptors);
+
       mCameraSet = mDescriptors->allocate(mCameraLayout);
       mLightsSet = mDescriptors->allocate(mLightsLayout);
 
@@ -108,9 +114,8 @@ namespace PurrfectEngine {
       mCameraSet->write(mCameraBuf);
 
       mLights.push_back({
-        glm::vec4(0.0f, 0.0f, 2.0f, 0.0f),
-        glm::vec4(1.0f, 0.0f, 0.0f, 10.0f),
-        glm::vec4(1.0f, 1.0f, 1.0f, 0.2f)
+        glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
+        glm::vec4(1.0f, 1.0f, 1.0f, 10.0f)
       });
       CreateLightsBuf();
 
@@ -139,6 +144,25 @@ namespace PurrfectEngine {
       mTexture = new vkTexture(mRenderer, Asset("textures/texture.png"));
       mTexture->initialize(mCommands, mDescriptors, mSwapchain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
+      {
+        vkTexture *albedo    = new vkTexture(mRenderer, Asset("textures/rustediron/albedo.png"));
+        vkTexture *normal    = new vkTexture(mRenderer, Asset("textures/rustediron/normal.png"));
+        vkTexture *metallic  = new vkTexture(mRenderer, Asset("textures/rustediron/metallic.png"));
+        vkTexture *roughness = new vkTexture(mRenderer, Asset("textures/rustediron/roughness.png"));
+        vkTexture *ao        = new vkTexture(mRenderer, Asset("textures/rustediron/ao.png"));
+        albedo->initialize(mCommands, mDescriptors, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, -1, -1, true, false, false);
+        normal->initialize(mCommands, mDescriptors, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, -1, -1, true, false, false);
+        metallic->initialize(mCommands, mDescriptors, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, -1, -1, true, false, false);
+        roughness->initialize(mCommands, mDescriptors, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, -1, -1, true, false, false);
+        ao->initialize(mCommands, mDescriptors, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, -1, -1, true, false, false);
+        mRustIronMat         = new vkMaterial(mRenderer, albedo);
+        mRustIronMat->setNormal(normal);
+        mRustIronMat->setMetallic(metallic);
+        mRustIronMat->setRoughness(roughness);
+        mRustIronMat->setAmbientOcclusion(ao);
+        mRustIronMat->initialize(mDescriptors);
+      }
+
       mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
 
       (void)new modelLoader(mRenderer);
@@ -166,6 +190,7 @@ namespace PurrfectEngine {
 
       delete mLightsBuf;
       delete mCameraBuf;
+      delete mRustIronMat;
       delete mTexture;
       delete mCommands;
       delete mDescriptors;
@@ -187,11 +212,12 @@ namespace PurrfectEngine {
       VkDeviceSize size = (sizeof(int)*4) + (sizeof(vkLight) * lightCount);
       auto stagingBuf = new vkBuffer(mRenderer);
       stagingBuf->initialize(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
+      glm::vec4 ambient(1.0f, 1.0f, 1.0f, 0.2f);
       stagingBuf->mapMemory();
         void* data = stagingBuf->getData();
         memcpy(data, &lightCount, sizeof(int)*4);
-        memcpy(&(((char*)data)[4* sizeof(int)]), mLights.data(), (sizeof(vkLight)*lightCount));
+        memcpy(&(((char*)data)[sizeof(glm::vec4)]),  &ambient,        sizeof(glm::vec4));
+        memcpy(&(((char*)data)[sizeof(glm::vec4)*2]), mLights.data(), (sizeof(vkLight)*lightCount));
       stagingBuf->unmapMemory();
 
       mLightsBuf = new vkBuffer(mRenderer);
@@ -216,6 +242,7 @@ namespace PurrfectEngine {
         CameraUBO ubo{};
         ubo.proj = mCamera->getProjection();
         ubo.view = mCamera->getView();
+        ubo.pos  = mCamera->getPosition();
 
         mCameraBuf->setData((void*)&ubo);
       }
@@ -305,7 +332,7 @@ namespace PurrfectEngine {
         mPipeline = new vkPipeline(mRenderer);
         mPipeline->setRenderPass(mSceneRenderPass);
         mPipeline->addDescriptor(mCameraLayout);
-        mPipeline->addDescriptor(getTextureLayout());
+        mPipeline->addDescriptor(getMaterialLayout());
         mPipeline->addDescriptor(mLightsLayout);
         mPipeline->addPushConstant(0, sizeof(glm::mat4)*2, VK_SHADER_STAGE_VERTEX_BIT);
         mPipeline->setVertexBind(MeshVertex::getBindingDescription());
@@ -315,7 +342,7 @@ namespace PurrfectEngine {
         auto vertShader = new vkShader(mRenderer);
         auto fragShader = new vkShader(mRenderer);
         vertShader->load(Asset("shaders/vert.spv"));
-        fragShader->load(Asset("shaders/frag.spv"));
+        fragShader->load(Asset("shaders/pbr.spv"));
         mPipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,   vertShader);
         mPipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT, fragShader);
         mPipeline->setCulling(VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_CULL_MODE_BACK_BIT);
@@ -397,7 +424,7 @@ namespace PurrfectEngine {
 
         if (mScene) {
           mCameraSet->bind(cmdBuf, mPipeline);
-          mTexture->bind(cmdBuf, mPipeline); // Default texture
+          mRustIronMat->bind(cmdBuf, mPipeline, 1);
           mLightsSet->bind(cmdBuf, mPipeline, 2);
 
           for (auto obj : mScene->getObjects()) {
@@ -578,10 +605,11 @@ namespace PurrfectEngine {
     vkPipeline      *mPipeline  = nullptr;
     vkPipeline      *mHdrPipeline  = nullptr;
 
-    vkBuffer        *mCameraBuf = nullptr;
-    vkDescriptorSet *mCameraSet = nullptr;
-    vkMesh          *mMesh      = nullptr;
-    vkTexture       *mTexture   = nullptr;
+    vkBuffer        *mCameraBuf   = nullptr;
+    vkDescriptorSet *mCameraSet   = nullptr;
+    vkMesh          *mMesh        = nullptr;
+    vkTexture       *mTexture     = nullptr;
+    vkMaterial      *mRustIronMat = nullptr;
 
     vkBuffer        *mLightsBuf = nullptr;
     vkDescriptorSet *mLightsSet = nullptr;
