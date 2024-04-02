@@ -2,6 +2,7 @@
 #define PURRENGINE_RENDERER_HPP_
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vk_enum_string_helper.h>
 
 #include "PurrfectEngine/core.hpp"
 #include "PurrfectEngine/utils.hpp"
@@ -13,7 +14,7 @@
 
 namespace PurrfectEngine {
 
-  #define CHECK_VK(check) { if((check) != VK_SUCCESS) { fprintf(stderr, "Failed '%s'!", PURR_STRINGIFY_MACRO(check)); PURR_DEBUGBREAK(); } }
+  #define CHECK_VK(check) { auto result = (check); if(result != VK_SUCCESS) { fprintf(stderr, "Failed '%s' with \"%s\"!\n", PURR_STRINGIFY_MACRO(check), string_VkResult(result)); exit(1); } }
 
   struct vkQueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -53,15 +54,15 @@ namespace PurrfectEngine {
   private:
     vkRenderer *mRenderer = nullptr;
   private:
-    std::optional<VkSurfaceFormatKHR> mFormat;
-    std::optional<VkPresentModeKHR> mPresentMode;
-    std::optional<VkExtent2D> mExtent;
-    std::optional<VkImageLayout> mLayout;
+    std::optional<VkSurfaceFormatKHR> mFormat{};
+    std::optional<VkPresentModeKHR>   mPresentMode{};
+    std::optional<VkExtent2D>         mExtent{};
+    std::optional<VkImageLayout>      mLayout{};
     
-    std::vector<VkImage> mImages;
-    std::vector<VkImageView> mImageViews;
+    std::vector<VkImage> mImages{};
+    std::vector<VkImageView> mImageViews{};
 
-    VkSwapchainKHR mSwapChain;
+    VkSwapchainKHR mSwapChain = VK_NULL_HANDLE;
   };
 
   class vkShader;
@@ -75,7 +76,7 @@ namespace PurrfectEngine {
     ~vkPipeline();
 
     void setVertexAttrs(std::vector<VkVertexInputAttributeDescription> x) { mVertexAttributeDescs = x; }
-    void setVertexBind(VkVertexInputBindingDescription x) { mVertexBindingDescription = &x; }
+    void setVertexBind(VkVertexInputBindingDescription *x) { mVertexBindingDescription = x; }
     void addShader(VkShaderStageFlagBits stage, vkShader *shader);
     void addDescriptor(vkDescriptorLayout *layout) { mDescriptors.push_back(layout); }
     void addPushConstant(uint32_t offset, uint32_t size, VkShaderStageFlagBits stage) { 
@@ -113,13 +114,13 @@ namespace PurrfectEngine {
     VkPipelineDepthStencilStateCreateInfo mDepthStencil;
     bool                                  mDepthStencilEnable = false;
 
-    VkFrontFace mFrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-    VkCullModeFlagBits mCullMode = VK_CULL_MODE_BACK_BIT;
+    VkFrontFace        mFrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    VkCullModeFlagBits mCullMode  = VK_CULL_MODE_BACK_BIT;
 
     bool mMsaa = false;
 
-    VkPipelineLayout mLayout;
-    VkPipeline       mPipeline;
+    VkPipelineLayout mLayout   = VK_NULL_HANDLE;
+    VkPipeline       mPipeline = VK_NULL_HANDLE;
   };
 
   class vkShader {
@@ -132,7 +133,7 @@ namespace PurrfectEngine {
   private:
     vkRenderer *mRenderer = nullptr;
   private:
-    VkShaderModule mModule;
+    VkShaderModule mModule = VK_NULL_HANDLE;
   };
 
   class vkRenderPass {
@@ -161,12 +162,12 @@ namespace PurrfectEngine {
 
     VkRenderPass get() const { return mPass; }
   private:
-    vkRenderer *mRenderer;
+    vkRenderer *mRenderer = nullptr;
   private:
     std::vector<VkImageLayout>           mAttachmentLayouts{};
     std::vector<VkImageLayout>           mAttachmentResolveLayouts{};
     std::vector<VkAttachmentDescription> mAttachmentDescs{};
-    VkRenderPass mPass;
+    VkRenderPass mPass = VK_NULL_HANDLE;
   };
 
   class vkFramebuffer {
@@ -187,7 +188,7 @@ namespace PurrfectEngine {
   private:
     std::vector<VkImageView> mAttachments{};
     VkExtent2D mExtent;
-    VkFramebuffer mFramebuffer;
+    VkFramebuffer mFramebuffer = VK_NULL_HANDLE;
   };
 
   class vkCommandPool {
@@ -210,7 +211,7 @@ namespace PurrfectEngine {
   private:
     vkRenderer *mRenderer = nullptr;
   private:
-    VkCommandPool mPool;
+    VkCommandPool mPool = VK_NULL_HANDLE;
   };
 
   class vkBuffer {
@@ -233,10 +234,10 @@ namespace PurrfectEngine {
   private:
     vkRenderer* mRenderer = nullptr;
   private:
-    VkBuffer       mBuffer;
-    VkDeviceMemory mMemory;
-    VkDeviceSize   mSize;
-    void          *mData;
+    VkBuffer       mBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory mMemory = 0;
+    VkDeviceSize   mSize   = 0;
+    void          *mData   = nullptr;
   private:
     bool mInitialized = false;
     bool mMapped      = false;
@@ -258,7 +259,7 @@ namespace PurrfectEngine {
   private:
     std::vector<VkDescriptorSetLayoutBinding> mBindings{};
 
-    VkDescriptorSetLayout mLayout;
+    VkDescriptorSetLayout mLayout = VK_NULL_HANDLE;
   };
 
   class vkDescriptorSet {
@@ -276,7 +277,7 @@ namespace PurrfectEngine {
 
     vkRenderer *mRenderer = nullptr;
   private:
-    VkDescriptorSet mSet;
+    VkDescriptorSet mSet = VK_NULL_HANDLE;
   };
 
   class vkDescriptorPool {
@@ -293,7 +294,7 @@ namespace PurrfectEngine {
   private:
     vkRenderer *mRenderer = nullptr;
   private:
-    VkDescriptorPool mPool;
+    VkDescriptorPool mPool = VK_NULL_HANDLE;
   };
 
   class vkRenderer {
@@ -360,21 +361,21 @@ namespace PurrfectEngine {
   private: // Vulkan variables
     vkQueueFamilyIndices mQueueFamily;
 
-    VkInstance               mInstance;
-    VkDebugUtilsMessengerEXT mDebugMessenger;
-    VkSurfaceKHR             mSurface;
-    VkPhysicalDevice         mPhysicalDevice;
-    VkDevice                 mDevice;
+    VkInstance               mInstance       = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT mDebugMessenger = VK_NULL_HANDLE;
+    VkSurfaceKHR             mSurface        = VK_NULL_HANDLE;
+    VkPhysicalDevice         mPhysicalDevice = VK_NULL_HANDLE;
+    VkDevice                 mDevice         = VK_NULL_HANDLE;
 
-    VkQueue mGraphicsQueue;
-    VkQueue mPresentQueue;
+    VkQueue mGraphicsQueue = VK_NULL_HANDLE;
+    VkQueue mPresentQueue  = VK_NULL_HANDLE;
 
-    std::vector<VkSemaphore> mImageAvailableSemaphores;
-    std::vector<VkSemaphore> mRenderFinishedSemaphores;
-    std::vector<VkFence>     mInFlightFences;
+    std::vector<VkSemaphore> mImageAvailableSemaphores{};
+    std::vector<VkSemaphore> mRenderFinishedSemaphores{};
+    std::vector<VkFence>     mInFlightFences{};
 
     uint32_t mFrame = 0;
-    uint32_t mImageIndex;
+    uint32_t mImageIndex = 0;
 
     vkSwapchain *mSwapChain = nullptr;
 

@@ -97,7 +97,7 @@ namespace PurrfectEngine {
     auto availableFormats = support.formats;
     for (const auto& availableFormat : availableFormats) 
       if ((std::find(requestedFormats.begin(), requestedFormats.end(), availableFormat.format) != requestedFormats.end()) && availableFormat.colorSpace == requestedColorSpace) mFormat = availableFormat;
-    mFormat = availableFormats[0];
+    if (!mFormat.has_value()) mFormat = availableFormats[0];
   }
 
   void vkSwapchain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& requestedPresentModes) {
@@ -112,8 +112,9 @@ namespace PurrfectEngine {
     auto support = mRenderer->QuerySwapChainSupport(mRenderer->mPhysicalDevice);
     auto capabilities = support.capabilities;
     if (capabilities.currentExtent.width == std::numeric_limits<uint32_t>::max()) {
-      int width, height;
+      int width = -1, height = -1;
       glfwGetFramebufferSize(win->get(), &width, &height);
+      PURR_ASSERT(width > 0 && height > 0);
 
       VkExtent2D actualExtent = {
         static_cast<uint32_t>(width),
@@ -311,18 +312,21 @@ namespace PurrfectEngine {
   void vkRenderPass::initialize() {
     std::vector<VkAttachmentReference> refs{};
     std::vector<VkAttachmentReference> resolveRefs{};
-    VkAttachmentReference *depthRef = nullptr;
+    bool depth = false;
+    VkAttachmentReference depthRef;
 
     uint32_t i = 0;
-    for (const auto &layout : mAttachmentLayouts) {
+    for (auto layout : mAttachmentLayouts) {
       VkAttachmentReference ref{};
       ref.attachment = i++;
       ref.layout = layout;
-      if (layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) depthRef = &ref;
+      if (layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        depth = true; depthRef = ref;
+      }
       else refs.push_back(ref);
     }
 
-    for (const auto &layout : mAttachmentResolveLayouts) {
+    for (auto layout : mAttachmentResolveLayouts) {
       VkAttachmentReference ref{};
       ref.attachment = i++;
       ref.layout = layout;
@@ -334,13 +338,13 @@ namespace PurrfectEngine {
     subpass.colorAttachmentCount = static_cast<uint32_t>(refs.size());
     subpass.pColorAttachments = refs.data();
     subpass.pResolveAttachments = resolveRefs.data();
-    if (depthRef) subpass.pDepthStencilAttachment = depthRef;
+    if (depth) subpass.pDepthStencilAttachment = &depthRef;
 
     VkSubpassDependency dependency{};
     dependency.srcSubpass    = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass    = 0;
     dependency.srcAccessMask = 0;
-    if (depthRef) {
+    if (depth) {
       dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
       dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
       dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
@@ -961,12 +965,11 @@ namespace PurrfectEngine {
   }
 
   VkFormat vkRenderer::getDepthFormat() {
-    if (mDepthFormat == VK_FORMAT_UNDEFINED) 
-      mDepthFormat = findSupportedFormat(
-        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-      );
+    if (mDepthFormat == VK_FORMAT_UNDEFINED) mDepthFormat = findSupportedFormat(
+      { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+      VK_IMAGE_TILING_OPTIMAL,
+      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
     return mDepthFormat;
   }
 

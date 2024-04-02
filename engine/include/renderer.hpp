@@ -113,8 +113,8 @@ namespace PurrfectEngine {
         mCameraSet->write(mCameraBuf);
 
       mLights.push_back({
-        glm::vec4(0.0f, 0.5f, 0.0f, 0.0f),
-        glm::vec4(1.0f, 1.0f, 1.0f, 10.0f)
+        glm::vec4(0.0f, 0.0f, 10.0f, 0.0f),
+        glm::vec4(1.0f, 1.0f, 1.0f, 150.0f)
       });
       CreateLightsBuf();
 

@@ -54,7 +54,7 @@ namespace PurrfectEngine {
     }
 
     const glm::mat3 getNormal() {
-      return glm::inverseTranspose(glm::mat3(getTransform()));
+      return glm::transpose(glm::inverse(glm::mat3(getTransform())));
     }
   private:
     glm::mat4 mTransform;

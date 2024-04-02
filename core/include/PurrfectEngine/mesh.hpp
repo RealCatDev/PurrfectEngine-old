@@ -13,11 +13,11 @@ namespace PurrfectEngine {
     glm::vec2 uv;
     glm::vec3 normal;
 
-    static VkVertexInputBindingDescription getBindingDescription() {
-      VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding = 0;
-      bindingDescription.stride = sizeof(MeshVertex);
-      bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    static VkVertexInputBindingDescription *getBindingDescription() {
+      VkVertexInputBindingDescription *bindingDescription = new VkVertexInputBindingDescription();
+      bindingDescription->binding = 0;
+      bindingDescription->stride = sizeof(MeshVertex);
+      bindingDescription->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
       return bindingDescription;
     }
