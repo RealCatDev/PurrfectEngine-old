@@ -16,9 +16,10 @@ int main (int argc, char **argv) {
 
   PurrfectEngine::purrScene *scene = new PurrfectEngine::purrScene();
   {
-    auto mesh = renderer->createMesh(PurrfectEngine::Asset("models/plane.fbx"));
+    auto mesh = renderer->createMesh(PurrfectEngine::Asset("models/sphere.fbx"));
 
-    auto obj = new PurrfectEngine::purrObject("floor");
+    auto obj = new PurrfectEngine::purrObject("sphere");
+    ((PurrfectEngine::transformComponent*)obj->getComponent("Transform"))->get()->setScale(glm::vec3(0.5f));
     obj->addComponent(new PurrfectEngine::meshComponent(mesh));
     scene->addObject(obj);
   }

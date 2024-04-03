@@ -53,6 +53,7 @@ void main() {
   vec3 Lo = vec3(0.0);
   for (int i = 0; i < lightBuffer.lightsCount; ++i) {
     Light light = lightBuffer.lights[i];
+    light.col = vec4(light.col.xyz * light.col.w, 0.0);
     vec3 L = normalize(light.pos.xyz - inPosWorld);
     vec3 H = normalize(V + L);
     float distance = length(light.pos.xyz - inPosWorld);

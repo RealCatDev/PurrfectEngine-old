@@ -113,8 +113,8 @@ namespace PurrfectEngine {
         mCameraSet->write(mCameraBuf);
 
       mLights.push_back({
-        glm::vec4(0.0f, 0.0f, 10.0f, 0.0f),
-        glm::vec4(1.0f, 1.0f, 1.0f, 150.0f)
+        glm::vec4(0.0f, 0.0f, 0.0f, 0.0f),
+        glm::vec4(150.0f, 150.0f, 150.0f, 150.0f)
       });
       CreateLightsBuf();
 
@@ -211,10 +211,10 @@ namespace PurrfectEngine {
       VkDeviceSize size = (sizeof(int)*4) + (sizeof(vkLight) * lightCount);
       auto stagingBuf = new vkBuffer(mRenderer);
       stagingBuf->initialize(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      glm::vec4 ambient(1.0f, 1.0f, 1.0f, 0.2f);
+      glm::vec4 ambient(1.0f, 1.0f, 1.0f, 0.03f);
       stagingBuf->mapMemory();
         void* data = stagingBuf->getData();
-        memcpy(data, &lightCount, sizeof(int)*4);
+        memcpy(          data,                       &lightCount,     sizeof(glm::vec4));
         memcpy(&(((char*)data)[sizeof(glm::vec4)]),  &ambient,        sizeof(glm::vec4));
         memcpy(&(((char*)data)[sizeof(glm::vec4)*2]), mLights.data(), (sizeof(vkLight)*lightCount));
       stagingBuf->unmapMemory();
@@ -241,7 +241,7 @@ namespace PurrfectEngine {
         CameraUBO ubo{};
         ubo.proj = mCamera->getProjection();
         ubo.view = mCamera->getView();
-        ubo.pos  = mCamera->getPosition();
+        ubo.pos  = glm::vec4(mCamera->getPosition(), 10.0f); // w = exposure
 
         mCameraBuf->setData((void*)&ubo);
       }
@@ -352,6 +352,7 @@ namespace PurrfectEngine {
       { // hdr pipeline
         mHdrPipeline = new vkPipeline(mRenderer);
         mHdrPipeline->setRenderPass(mHdrRenderPass);
+        mHdrPipeline->addDescriptor(mCameraLayout);
         mHdrPipeline->addDescriptor(getTextureLayout());
 
         auto vertShader = new vkShader(mRenderer);
@@ -476,7 +477,8 @@ namespace PurrfectEngine {
 
         vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, mHdrPipeline->get());
 
-        mSceneImages[mRenderer->frame()]->bind(cmdBuf, mHdrPipeline, 0);
+        mCameraSet->bind(cmdBuf, mHdrPipeline);
+        mSceneImages[mRenderer->frame()]->bind(cmdBuf, mHdrPipeline, 1);
         vkCmdDraw(cmdBuf, 6, 1, 0, 0);
 
         vkCmdEndRenderPass(cmdBuf);

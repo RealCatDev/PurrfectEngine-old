@@ -25,6 +25,7 @@ namespace PurrfectEngine {
     void setFilename(const char *filename) { mFilename = (char*)filename; }
 
     void initialize(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, VkImageLayout targetLayout, int width = -1, int height = -1, bool mipmaps = true, bool msaaSamples = false, bool descriptor = true, uint8_t *pixels = nullptr);
+    void initializeHdr(vkCommandPool *pool, vkDescriptorPool *descriptors, VkFormat format, VkImageLayout targetLayout, int width = -1, int height = -1, bool mipmaps = true, bool msaaSamples = false, bool descriptor = true, float *pixels = nullptr);
     void cleanup();
     void bind(VkCommandBuffer cmdBuf, vkPipeline *pipeline, uint32_t set = 1);
 
