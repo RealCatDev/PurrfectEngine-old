@@ -2,7 +2,6 @@
 #define PURRENGINE_EDITOR_RENDERER_HPP_
 
 #include <PurrfectEngine/renderer.hpp>
-#include <PurrfectEngine/camera.hpp>
 #include <PurrfectEngine/mesh.hpp>
 #include <PurrfectEngine/light.hpp>
 #include <PurrfectEngine/loaders.hpp>
@@ -12,18 +11,20 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "panels.hpp"
+#include "camera.hpp"
 
 namespace PurrfectEngine {
 
   class renderer {
   public:
     renderer(window *win):
-      mRenderer(new vkRenderer(win)), mWindow(win)
+      mRenderer(new vkRenderer(win)), mWindow(win), mInput(new Input::input(mWindow))
     {}
 
     ~renderer() {
       cleanup();
 
+      delete mInput;
       delete mRenderer;
     }
 
@@ -162,16 +163,20 @@ namespace PurrfectEngine {
         mRustIronMat->initialize(mDescriptors);
       }
 
-      mCamera = new purrCamera(new purrTransform(glm::vec3(0.0f, 0.0f, -10.0f)));
+      mCamera = new EditorCamera(mInput);
 
       (void)new modelLoader(mRenderer);
     }
 
     void render() {
+      double currentTime = glfwGetTime();
+      double dT = currentTime - mLastTime;
+      mLastTime = currentTime;
+
       if (mRenderer->beginDraw()) {
         auto cmdBuf = mCommandBuffers[mRenderer->frame()];
         vkResetCommandBuffer(cmdBuf, 0);
-        Update();
+        Update(dT);
         RecordCommandBuffer(cmdBuf);
         mRenderer->endDraw(cmdBuf);
       }
@@ -233,17 +238,20 @@ namespace PurrfectEngine {
       CreateLightsBuf();
     }
 
-    void Update() {
-      auto extnt = mSwapchain->getExtent();
-      mCamera->calculate({ extnt.width, extnt.height });
-      // Update CameraUBO
-      {
-        CameraUBO ubo{};
-        ubo.proj = mCamera->getProjection();
-        ubo.view = mCamera->getView();
-        ubo.pos  = glm::vec4(mCamera->getPosition(), 10.0f); // w = exposure
+    void Update(double dt) {
+      { // Update CameraUBO
+        mCamera->update(dt); // Update camera position, rotation etc...
+        
+        // Calculate camera's projection and view
+        auto extnt = mSwapchain->getExtent();
+        mCamera->get()->calculate({ extnt.width, extnt.height });
 
-        mCameraBuf->setData((void*)&ubo);
+        CameraUBO ubo{}; // Create uniform buffer object
+        ubo.proj = mCamera->get()->getProjection();
+        ubo.view = mCamera->get()->getView();
+        ubo.pos  = glm::vec4(mCamera->get()->getPosition(), 10.0f); // w = exposure
+
+        mCameraBuf->setData((void*)&ubo); // Write object to uniform buffer
       }
     }
 
@@ -569,6 +577,8 @@ namespace PurrfectEngine {
       ImGui::End(); // Dockspace
     }
   private:
+    double mLastTime = 0;
+  private:
     window           *mWindow      = nullptr;
 
     vkRenderer       *mRenderer    = nullptr;
@@ -587,6 +597,7 @@ namespace PurrfectEngine {
     bool                         mSwapchainResized = false;
 
     ImGuiHelper     *mImGui     = nullptr;
+    Input::input    *mInput     = nullptr;
 
     glm::vec2 mScnViewportBounds[2];
 
@@ -615,7 +626,7 @@ namespace PurrfectEngine {
     vkBuffer        *mLightsBuf = nullptr;
     vkDescriptorSet *mLightsSet = nullptr;
 
-    purrCamera      *mCamera    = nullptr;
+    EditorCamera    *mCamera    = nullptr;
 
     purrScene       *mScene     = nullptr;
 

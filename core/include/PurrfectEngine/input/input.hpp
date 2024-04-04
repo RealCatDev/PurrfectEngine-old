@@ -6,32 +6,26 @@
 
 #include <GLFW/glfw3.h>
 
-#include <unordered_map>
-
 namespace PurrfectEngine {
-    class window;
+  class window;
 namespace Input {
 
-    class input {
-    public:
-        input(window *win);
-        ~input();
+  class input {
+  public:
+    input(window *win);
+    ~input();
 
-        bool isKeyPressed(keyBinds key);
-        bool isKeyReleased(keyBinds key);
-        void updateKeyState();
+    bool isKeyPressed(keyBinds key);
+    bool isKeyReleased(keyBinds key);
 
-        bool isMouseButtonDown(mouseButton button);
-        bool isMouseButtonReleased(mouseButton button);
-        void updateMouseButtonState();
-        
-        glm::vec2 getMousePosition();
-        glm::vec2 getMouseDelta();
-    private:
-        GLFWwindow* mWindow;
-        std::unordered_map<keyBinds, bool> mKeyState;
-        std::unordered_map<mouseButton, bool> mMouseButtonState;
-    };
+    bool isMouseButtonDown(mouseButton button);
+    bool isMouseButtonReleased(mouseButton button);
+
+    glm::vec2 getMousePosition();
+    glm::vec2 getMouseDelta();
+  private:
+    GLFWwindow* mWindow;
+  };
 
 }
 }

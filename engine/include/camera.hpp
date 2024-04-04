@@ -16,12 +16,22 @@ namespace PurrfectEngine {
     }
 
     ~EditorCamera() {
-
+      delete mCamera;
+      delete mTransform;
     }
 
-    void update() {
-      
+    // dt = delta time
+    void update(double dt) {
+      int x = ((int)mInput->isKeyPressed(Input::keyBinds::KEY_D)) - ((int)mInput->isKeyPressed(Input::keyBinds::KEY_A));
+      int z = ((int)mInput->isKeyPressed(Input::keyBinds::KEY_W)) - ((int)mInput->isKeyPressed(Input::keyBinds::KEY_S));
+      glm::vec3 finalPos = glm::vec3(0.0f);
+      finalPos += mTransform->getForward() * glm::vec3(0.0f, 0.0f, z);
+      finalPos += -mTransform->getRight() * glm::vec3(x, 0.0f, 0.0f);
+      finalPos *= (float)dt;
+      mTransform->getPosition() += finalPos;
     }
+
+    purrCamera *get() const { return mCamera; }
   private:
     Input::input *mInput = nullptr;
 

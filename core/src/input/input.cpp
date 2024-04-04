@@ -11,27 +11,19 @@ namespace PurrfectEngine::Input {
   }
 
   bool input::isKeyPressed(keyBinds key) {
-    return glfwGetKey(mWindow, static_cast<int>(key)) == GLFW_PRESS && !mKeyState[key];
+    return glfwGetKey(mWindow, static_cast<int>(key)) == GLFW_PRESS;
   }
 
   bool input::isKeyReleased(keyBinds key) {
-    return glfwGetKey(mWindow, static_cast<int>(key)) == GLFW_RELEASE && mKeyState[key];
-  }
-
-  void input::updateKeyState() {
-    for (auto& [key, value] : mKeyState) value = glfwGetKey(mWindow, static_cast<int>(key)) == GLFW_PRESS;
+    return glfwGetKey(mWindow, static_cast<int>(key)) == GLFW_RELEASE;
   }
 
   bool input::isMouseButtonDown(mouseButton button) {
-    return glfwGetMouseButton(mWindow, static_cast<int>(button)) == GLFW_PRESS && !mMouseButtonState[button];
+    return glfwGetMouseButton(mWindow, static_cast<int>(button)) == GLFW_PRESS;
   }
 
   bool input::isMouseButtonReleased(mouseButton button) {
-    return glfwGetMouseButton(mWindow, static_cast<int>(button)) == GLFW_RELEASE && mMouseButtonState[button];
-  }
-
-  void input::updateMouseButtonState() {
-    for (auto& [button, value] : mMouseButtonState) value = glfwGetMouseButton(mWindow, static_cast<int>(button)) == GLFW_PRESS;
+    return glfwGetMouseButton(mWindow, static_cast<int>(button)) == GLFW_RELEASE;
   }
 
   glm::vec2 input::getMousePosition() {
