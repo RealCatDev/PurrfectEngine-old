@@ -53,6 +53,14 @@ namespace PurrfectEngine {
       return glm::normalize(glm::cross(forward, right));
     }
 
+    const glm::vec3 clamp(glm::vec3 value, float min, float max) {
+      return glm::vec3(
+        std::clamp(value.x, min, max),
+        std::clamp(value.y, min, max),
+        std::clamp(value.z, min, max)
+      );
+    }
+
     const glm::mat3 getNormal() {
       return glm::transpose(glm::inverse(glm::mat3(getTransform())));
     }

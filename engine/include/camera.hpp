@@ -22,11 +22,11 @@ namespace PurrfectEngine {
       };
 
       mInput->setMouseButtonCallback([this](int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-          if (action == GLFW_PRESS) {
+        if (button == Input::mouseButton::MOUSE_MIDDLE) {
+          if (action == mInput->isMouseButtonDown(Input::mouseButton::MOUSE_MIDDLE)) {
             mIsScrolling = true;
             mLastMousePos = mInput->getMousePosition();
-          } else if (action == GLFW_RELEASE) {
+          } else if (action == mInput->isMouseButtonReleased(Input::mouseButton::MOUSE_MIDDLE)) {
             mIsScrolling = false;
           }
         }
@@ -39,13 +39,13 @@ namespace PurrfectEngine {
 
             float pitch = mTransform->getRotation().x - delta.y;
             float yaw = mTransform->getRotation().y - delta.x;
-            pitch = glm::clamp(pitch, -89.0f, 89.0f);
-
-            mTransform->setRotation(glm::vec3(pitch, yaw, 0.0f));
-
+            mTransform->setRotation(glm::vec3(yaw, pitch, 0.0f));
+            mTransform->getRotation().y = glm::clamp(mTransform->getRotation().y, -90.0f, 90.0f);
             mLastMousePos = mousePos;
         }
     });
+
+
 
 
       mInput->addScrollCallback([this](double xOffset, double yOffset) { 
