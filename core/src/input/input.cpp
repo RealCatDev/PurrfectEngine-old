@@ -4,7 +4,25 @@
 namespace PurrfectEngine::Input {
 
   input::input(::PurrfectEngine::window *win):
-    mWindow(win->get()) {}
+    mWindow(win->get()) {
+      glfwSetWindowUserPointer(mWindow, this);
+
+      glfwSetKeyCallback(mWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        auto input = static_cast<Input::input*>(glfwGetWindowUserPointer(window));
+        if (action == GLFW_PRESS) {
+          if (input->mKeyBindings.find(static_cast<keyBinds>(key)) != input->mKeyBindings.end()) {
+            input->mKeyBindings[static_cast<keyBinds>(key)]();
+          }
+        }
+      });
+
+      glfwSetScrollCallback(mWindow, [](GLFWwindow* window, double xOffset, double yOffset) {
+        auto input = static_cast<Input::input*>(glfwGetWindowUserPointer(window));
+        for (const auto& callback : input->mScrollCallbacks) {
+          callback(xOffset, yOffset);
+        }
+      });
+    }
 
   input::~input() {
 
@@ -41,6 +59,14 @@ namespace PurrfectEngine::Input {
     lastX = xPos;
     lastY = yPos;
     return glm::vec2(deltaX, deltaY);
+  }
+
+  void input::setKeyBinding(keyBinds key, std::function<void()> action) {
+    mKeyBindings[key] = action;
+  }
+
+  void input::addScrollCallback(std::function<void(double, double)> callback) {
+    mScrollCallbacks.push_back(callback);
   }
 
 }
