@@ -69,4 +69,28 @@ namespace PurrfectEngine::Input {
     mScrollCallbacks.push_back(callback);
   }
 
+  void input::setMouseButtonCallback(std::function<void(int, int, int)> callback) {
+    mMouseButtonCallback = callback;
+    glfwSetMouseButtonCallback(mWindow, glfwMouseButtonCallback);
+}
+
+void input::setMouseMoveCallback(std::function<void(double, double)> callback) {
+    mMouseMoveCallback = callback;
+    glfwSetCursorPosCallback(mWindow, glfwMouseMoveCallback);
+}
+
+void input::glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    input* inputInstance = reinterpret_cast<input*>(glfwGetWindowUserPointer(window));
+    if (inputInstance && inputInstance->mMouseButtonCallback) {
+        inputInstance->mMouseButtonCallback(button, action, mods);
+    }
+}
+
+void input::glfwMouseMoveCallback(GLFWwindow* window, double xPos, double yPos) {
+    input* inputInstance = reinterpret_cast<input*>(glfwGetWindowUserPointer(window));
+    if (inputInstance && inputInstance->mMouseMoveCallback) {
+        inputInstance->mMouseMoveCallback(xPos, yPos);
+    }
+}
+
 }
