@@ -29,23 +29,26 @@ namespace PurrfectEngine {
       glm::vec2 delta;
       {
         auto mousePos = mInput->getMousePosition();
-        delta = (mousePos - mMousePosition);
+        delta = (mousePos - mMousePosition) * 0.03f;
         mMousePosition = mousePos;
       }
 
       float z = mInput->isKeyPressed(Input::keyBinds::KEY_W) - mInput->isKeyPressed(Input::keyBinds::KEY_S);
       float x = mInput->isKeyPressed(Input::keyBinds::KEY_D) - mInput->isKeyPressed(Input::keyBinds::KEY_A);
       glm::vec3 pos = glm::vec3(0.0f);
-      pos += mTransform->getForward() * glm::vec3(0.0f, 0.0f, z);
-      pos += mTransform->getRight()   * glm::vec3(x, 0.0f, 0.0f);
+      pos += mTransform->getForward() * z;
+      pos += mTransform->getRight()   * x;
       pos *= mMovementSpeed * dt;
       mTransform->getPosition() += pos;
 
-      // if (mInput->isMouseButtonDown(Input::mouseButton::MOUSE_RIGHT)) {
-      //   mYaw += delta.x;
-      //   mPitch += delta.y;
-      //   if (mPitch > 90.0f) mPitch = 90.0f;
-      // }
+      if (mInput->isMouseButtonDown(Input::mouseButton::MOUSE_RIGHT)) {
+        mYaw += delta.x;
+        mPitch += delta.y;
+        if (mPitch > 90.0f)  mPitch = 90.0f;
+        else if (mPitch < -90.0f) mPitch = -90.0f;
+        mTransform->setYawPitch(mYaw, mPitch);
+        auto forward = mTransform->getForward();
+      }
     }
 
     purrCamera *get() const { return mCamera; }
