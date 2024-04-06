@@ -14,45 +14,8 @@ namespace PurrfectEngine {
       mTransform = new purrTransform();
       mCamera = new purrCamera(mTransform);
 
-      mKeyBindings = {
-        { Input::keyBinds::KEY_W, [this]() { moveForward(); } },
-        { Input::keyBinds::KEY_S, [this]() { moveBackward(); } },
-        { Input::keyBinds::KEY_A, [this]() { strafeLeft(); } },
-        { Input::keyBinds::KEY_D, [this]() { strafeRight(); } }
-      };
-
-      mInput->setMouseButtonCallback([this](int button, int action, int mods) {
-        if (button == Input::mouseButton::MOUSE_MIDDLE) {
-          if (action == mInput->isMouseButtonDown(Input::mouseButton::MOUSE_MIDDLE)) {
-            mIsScrolling = true;
-            mLastMousePos = mInput->getMousePosition();
-          } else if (action == mInput->isMouseButtonReleased(Input::mouseButton::MOUSE_MIDDLE)) {
-            mIsScrolling = false;
-          }
-        }
-      });
-
-      mInput->setMouseMoveCallback([this](double xPos, double yPos) {
-        if (mIsScrolling) {
-            glm::vec2 mousePos = glm::vec2(xPos, yPos);
-            glm::vec2 delta = (mousePos - mLastMousePos) * 0.01f;
-
-            float pitch = mTransform->getRotation().x - delta.y;
-            float yaw = mTransform->getRotation().y - delta.x;
-            mTransform->setRotation(glm::vec3(yaw, pitch, 0.0f));
-            mTransform->getRotation().y = glm::clamp(mTransform->getRotation().y, -90.0f, 90.0f);
-            mLastMousePos = mousePos;
-        }
-    });
-
-
-
-
-      mInput->addScrollCallback([this](double xOffset, double yOffset) { 
-        if (mInput->isKeyPressed(Input::keyBinds::KEY_LEFT_ALT) || mInput->isKeyPressed(Input::keyBinds::KEY_RIGHT_ALT)) {
-          mMovementSpeed += yOffset * 0.1f;
-          if (mMovementSpeed < 0.1f) mMovementSpeed = 0.1f;
-        }
+      mInput->addScrollCallback([this](double xOffset, double yOffset) {
+        if (mInput->isKeyPressed(Input::keyBinds::KEY_LEFT_ALT)) { mMovementSpeed += yOffset; mMovementSpeed = glm::clamp(mMovementSpeed, 0.1f, 10.0f); }
       });
     }
 
@@ -63,11 +26,26 @@ namespace PurrfectEngine {
 
     // dt = delta time
     void update(double dt) {
-      for (const auto& [key, action] : mKeyBindings) {
-        if (mInput->isKeyPressed(key)) {
-          action();
-        }
+      glm::vec2 delta;
+      {
+        auto mousePos = mInput->getMousePosition();
+        delta = (mousePos - mMousePosition);
+        mMousePosition = mousePos;
       }
+
+      float z = mInput->isKeyPressed(Input::keyBinds::KEY_W) - mInput->isKeyPressed(Input::keyBinds::KEY_S);
+      float x = mInput->isKeyPressed(Input::keyBinds::KEY_D) - mInput->isKeyPressed(Input::keyBinds::KEY_A);
+      glm::vec3 pos = glm::vec3(0.0f);
+      pos += mTransform->getForward() * glm::vec3(0.0f, 0.0f, z);
+      pos += mTransform->getRight()   * glm::vec3(x, 0.0f, 0.0f);
+      pos *= mMovementSpeed * dt;
+      mTransform->getPosition() += pos;
+
+      // if (mInput->isMouseButtonDown(Input::mouseButton::MOUSE_RIGHT)) {
+      //   mYaw += delta.x;
+      //   mPitch += delta.y;
+      //   if (mPitch > 90.0f) mPitch = 90.0f;
+      // }
     }
 
     purrCamera *get() const { return mCamera; }
@@ -77,27 +55,10 @@ namespace PurrfectEngine {
     purrTransform *mTransform = nullptr;
     purrCamera    *mCamera = nullptr;
 
-    std::unordered_map<Input::keyBinds, std::function<void()>> mKeyBindings;
-
     float mMovementSpeed;
     bool mIsScrolling;
-    glm::vec2 mLastMousePos;
-
-    void moveForward() {
-      mTransform->getPosition() += mTransform->getForward() * glm::vec3(0.0f, 0.0f, mMovementSpeed);
-    }
-
-    void moveBackward() {
-      mTransform->getPosition() += mTransform->getForward() * glm::vec3(0.0f, 0.0f, -mMovementSpeed);
-    }
-
-    void strafeLeft() {
-      mTransform->getPosition() += mTransform->getRight() * glm::vec3(-mMovementSpeed, 0.0f, 0.0f);
-    }
-
-    void strafeRight() {
-      mTransform->getPosition() += mTransform->getRight() * glm::vec3(mMovementSpeed, 0.0f, 0.0f);
-    }
+    glm::vec2 mMousePosition;
+    float mYaw = -90.0f, mPitch = 0.0f;
   };
 
 }

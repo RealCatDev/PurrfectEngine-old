@@ -3,70 +3,61 @@
 
 #include "PurrfectEngine/core.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
+
+#include <algorithm>
 
 namespace PurrfectEngine {
 
   class purrTransform {
   public:
-    purrTransform(glm::vec3 position = glm::vec3(0.0f), glm::vec3 rotation = glm::vec3(0.0f), glm::vec3 scale = glm::vec3(1.0f)):
+    purrTransform(glm::vec3 position = glm::vec3(0.0f), glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3 scale = glm::vec3(1.0f)):
       mPos(position), mRot(rotation), mScl(scale)
     {}
 
-    ~purrTransform() {
+    ~purrTransform() {}
 
-    }
-
-    const glm::mat4 getTransform() { 
-      return mTransform = glm::translate(glm::mat4(1.0f), mPos)
-                          * glm::rotate(glm::mat4(1.0f), glm::radians(mRot.x), glm::vec3(1.0f, 0.0f, 0.0f))
-                          * glm::rotate(glm::mat4(1.0f), glm::radians(mRot.y), glm::vec3(0.0f, 1.0f, 0.0f))
-                          * glm::rotate(glm::mat4(1.0f), glm::radians(mRot.z), glm::vec3(0.0f, 0.0f, 1.0f))
-                          * glm::scale(glm::mat4(1.0f), mScl);
+    const glm::mat4 getTransform() {
+      glm::mat4 transform = glm::translate(glm::mat4(1.0f), mPos);
+      if (mRot != glm::identity<glm::quat>()) transform *= glm::mat4_cast(mRot);
+      return glm::scale(transform, mScl);
     }
     
     glm::vec3 &getPosition() { return mPos; }
-    glm::vec3 &getRotation() { return mRot; }
-    glm::vec3 &getScale   () { return mScl; }
+    glm::quat &getRotation() { return mRot; }
+    glm::vec3 &getScale() { return mScl; }
 
     void setPosition(glm::vec3 v) { mPos = v; }
-    void setRotation(glm::vec3 v) { mRot = v; }
-    void setScale   (glm::vec3 v) { mScl = v; }
+    void setRotation(glm::quat q) { mRot = q; }
+    void setScale(glm::vec3 v) { mScl = v; }
+
+    void setYawPitch(float yaw, float pitch) {
+      const auto yawRotation   = glm::angleAxis(yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+      const auto pitchRotation = glm::angleAxis(pitch, glm::vec3(-1.0f, 0.0f, 0.0f));
+      mRot = yawRotation * pitchRotation;
+    }
 
     const glm::vec3 getForward() const {
-      return glm::vec3(sin(mRot.y), -tan(mRot.x), cos(mRot.y));
+      return glm::rotate(mRot, glm::vec3(0.0f, 0.0f, 1.0f));
     }
 
     const glm::vec3 getRight() const {
-      glm::vec3 forward = getForward();
-      forward = glm::normalize(forward);
-      glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-      
-      return glm::normalize(glm::cross(worldUp, forward));
+      return glm::rotate(mRot, glm::vec3(-1.0f, 0.0f, 0.0f));
     }
 
     const glm::vec3 getUp() const {
-      glm::vec3 forward = getForward();
-      forward = glm::normalize(forward);
-      glm::vec3 right = getRight();
-
-      return glm::normalize(glm::cross(forward, right));
-    }
-
-    const glm::vec3 clamp(glm::vec3 value, float min, float max) {
-      return glm::vec3(
-        std::clamp(value.x, min, max),
-        std::clamp(value.y, min, max),
-        std::clamp(value.z, min, max)
-      );
+      return glm::rotate(mRot, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     const glm::mat3 getNormal() {
       return glm::transpose(glm::inverse(glm::mat3(getTransform())));
     }
+
   private:
-    glm::mat4 mTransform;
-    glm::vec3 mPos, mRot, mScl;
+    glm::vec3 mPos, mScl;
+    glm::quat mRot;
   };
 
 }

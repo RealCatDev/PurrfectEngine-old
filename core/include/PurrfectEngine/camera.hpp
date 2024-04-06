@@ -24,7 +24,7 @@ namespace PurrfectEngine {
     void calculate(glm::ivec2 size) {
       mProj = glm::perspective(glm::radians(mFOV), size.x / (float) size.y, mNearPlane, mFarPlane);
       mProj[1][1] *= -1;
-      mView = glm::lookAt(mTransform->getPosition(), mTransform->getPosition() + mTransform->getForward(), glm::vec3(0.0f, 1.0f, 0.0f));
+      mView = glm::lookAt(mTransform->getPosition(), mTransform->getPosition() + mTransform->getForward(), mTransform->getUp());
     }
 
     glm::mat4 getProjection() const { return mProj; }
