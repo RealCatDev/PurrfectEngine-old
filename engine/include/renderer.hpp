@@ -120,6 +120,7 @@ namespace PurrfectEngine {
       CreateLightsBuf();
 
       mSceneExtent = { 1920, 1080 };
+      mCamera = new EditorCamera(mInput);
       CreateSwapchain();
       {
         mHdrRenderPass = new vkRenderPass(mRenderer);
@@ -162,8 +163,6 @@ namespace PurrfectEngine {
         mRustIronMat->setAmbientOcclusion(ao);
         mRustIronMat->initialize(mDescriptors);
       }
-
-      mCamera = new EditorCamera(mInput);
 
       (void)new modelLoader(mRenderer);
     }
@@ -241,10 +240,6 @@ namespace PurrfectEngine {
     void Update(double dt) {
       { // Update CameraUBO
         mCamera->update(dt); // Update camera position, rotation etc...
-        
-        // Calculate camera's projection and view
-        auto extnt = mSwapchain->getExtent();
-        mCamera->get()->calculate({ extnt.width, extnt.height });
 
         CameraUBO ubo{}; // Create uniform buffer object
         ubo.proj = mCamera->get()->getProjection();
@@ -264,6 +259,11 @@ namespace PurrfectEngine {
       mSwapchain->initialize(mCommands);
       mSwapchain->attach(mRenderer);
 
+      {
+        auto extnt = mSwapchain->getExtent();
+        mCamera->get()->calculate({ extnt.width, extnt.height });
+      }
+      
       mFramebuffers.resize(MAX_FRAMES_IN_FLIGHT);
       for (size_t i = 0; i < mFramebuffers.size(); ++i) {
         auto fb = new vkFramebuffer(mRenderer);

@@ -30,7 +30,8 @@ namespace PurrfectEngine {
     glm::vec3 &getScale() { return mScl; }
 
     void setPosition(glm::vec3 v) { mPos = v; }
-    void setRotation(glm::quat q) { mRot = q; }
+    void setRotation(glm::quat q) { mRot = glm::normalize(q); }
+    void setRotation(glm::vec3 r) { mRot = glm::quat(r); }
     void setScale(glm::vec3 v) { mScl = v; }
 
     void setYawPitch(float yaw, float pitch) {

@@ -29,7 +29,7 @@ namespace PurrfectEngine {
       glm::vec2 delta;
       {
         auto mousePos = mInput->getMousePosition();
-        delta = (mousePos - mMousePosition) * 0.03f;
+        delta = (mousePos - mMousePosition) * mMouseSensivity;
         mMousePosition = mousePos;
       }
 
@@ -44,10 +44,8 @@ namespace PurrfectEngine {
       if (mInput->isMouseButtonDown(Input::mouseButton::MOUSE_RIGHT)) {
         mYaw += delta.x;
         mPitch += delta.y;
-        if (mPitch > 90.0f)  mPitch = 90.0f;
-        else if (mPitch < -90.0f) mPitch = -90.0f;
-        mTransform->setYawPitch(mYaw, mPitch);
-        auto forward = mTransform->getForward();
+        mPitch = glm::clamp(mPitch, -89.0f, 89.0f);
+        mTransform->setRotation(glm::vec3(-mPitch, -mYaw, 0.0f));
       }
     }
 
@@ -58,10 +56,10 @@ namespace PurrfectEngine {
     purrTransform *mTransform = nullptr;
     purrCamera    *mCamera = nullptr;
 
-    float mMovementSpeed;
+    float mMovementSpeed, mMouseSensivity = 0.02f;
     bool mIsScrolling;
     glm::vec2 mMousePosition;
-    float mYaw = -90.0f, mPitch = 0.0f;
+    float mYaw = 0.0f, mPitch = 0.0f;
   };
 
 }
