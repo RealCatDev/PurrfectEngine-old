@@ -39,4 +39,6 @@ set(DEFAULT_LIBS spdlog glfw glm Vulkan::Vulkan ImGuizmo assimp)
 set(IMGUI_FILES ${IMGUI_DIR}backends/imgui_impl_glfw.cpp ${IMGUI_DIR}backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}imgui.cpp ${IMGUI_DIR}imgui_draw.cpp ${IMGUI_DIR}imgui_demo.cpp ${IMGUI_DIR}imgui_tables.cpp ${IMGUI_DIR}imgui_widgets.cpp)
 
 add_subdirectory(core)
+add_subdirectory(renderer)
 add_subdirectory(engine)
+add_subdirectory(test)
