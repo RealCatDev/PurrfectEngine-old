@@ -279,7 +279,6 @@ namespace PurrfectEngine {
   private:
     VkDescriptorSet mSet = VK_NULL_HANDLE;
   };
-
   class vkDescriptorPool {
   public:
     vkDescriptorPool(vkRenderer *renderer);
