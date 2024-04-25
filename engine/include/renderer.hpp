@@ -572,7 +572,12 @@ namespace PurrfectEngine {
       ImGui::End();
       ImGui::PopStyleVar();
 
+      FileManagerPanel::Refresh();
+
       HierarchyPanel::Render();
+      FileManagerPanel::Render();
+
+
 
       ImGui::End(); // Dockspace
     }
@@ -629,7 +634,6 @@ namespace PurrfectEngine {
     EditorCamera    *mCamera    = nullptr;
 
     purrScene       *mScene     = nullptr;
-
     std::vector<vkLight> mLights;
   private: // ImGui stuff
     bool mSceneWndoOpen = true;

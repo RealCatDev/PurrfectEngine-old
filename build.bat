@@ -16,7 +16,12 @@ IF "%1"=="clean" (
 
 IF "%1"=="run" (
     REM Run the generated executable
-    "%build%/%START_PROJ%/Release/%START_PROJ%.exe" ./assets/
+    "%build%/%START_PROJ%/Release/%START_PROJ%.exe" ./test/
+    exit /b
+)
+
+IF "%1" =="cd" (
+    cd "%build%/%START_PROJ%/Release/
     exit /b
 )
 

@@ -7,12 +7,17 @@
 
 int main (int argc, char **argv) {
   PurrfectEngine::application *app = new PurrfectEngine::application();
-  app->setAssetDir("../assets/");
-  if (argc > 1) app->setAssetDir(argv[1]);
+  app->setProjDir("./test/");
+  if (argc > 1) app->setProjDir(argv[1]);
+  std::string assetDir = std::string(app->getProjDir()) + "assets/";
+  app->setAssetDir(assetDir.c_str());
+  
 
   PurrfectEngine::window   *window   = new PurrfectEngine::window("PurrfectEngine", 1920, 1070);
   PurrfectEngine::renderer *renderer = new PurrfectEngine::renderer(window);
   renderer->initialize();
+
+  
 
   PurrfectEngine::purrScene *scene = new PurrfectEngine::purrScene();
   {
