@@ -8,6 +8,8 @@
 #include <PurrfectEngine/application.hpp>
 #include <PurrfectEngine/texture.hpp>
 #include <PurrfectEngine/utils.hpp>
+#include <PurrfectEngine/renderer.hpp>
+#include <PurrfectEngine/collection.hpp>
 
 namespace PurrfectEngine {
   struct FileNode {
@@ -32,9 +34,11 @@ namespace PurrfectEngine {
   // MARK: FileView
   class FileManagerPanel {
   public:
-    static void Initialize(vkRenderer *renderer, vkCommandPool *commandPool, vkDescriptorPool *descriptorPool)
+    static void Initialize(vkRenderer *renderer, vkCommandPool *commandPool, vkDescriptorPool *descriptorPool, vkSwapchain *swapChain) {
       sTexture = new vkTexture(renderer, Asset("textures/texture.png"));
-      sTexture->initialize(commandPool, descriptorPool, mSwapchain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      sTexture->initialize(commandPool, descriptorPool, swapChain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+      sCollection = new Collection();
+      sCollection->
     }
     
     static void Cleanup() {
@@ -43,7 +47,7 @@ namespace PurrfectEngine {
     
     static void Render() {
       ImGui::Begin("FileManager", &mOpen);
-      ImTextureID texId = (ImTextureID)sTexture.getSet();
+      ImTextureID texId = (ImTextureID)sTexture->getSet();
       for (const auto& node : mRootNode.children) {
         RenderNode(node, texId, texId);
       }
@@ -113,9 +117,10 @@ namespace PurrfectEngine {
       }
     }
   private:
-    static FileNode mRootNode; // Virtual root node for folder tree
+    inline static FileNode mRootNode; // Virtual root node for folder tree
     inline static bool mOpen = true;
 
+    inline static Collection *sCollection = nullptr;
     inline static vkTexture *sTexture = nullptr;
   };
 }

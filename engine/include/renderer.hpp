@@ -166,7 +166,7 @@ namespace PurrfectEngine {
 
       (void)new modelLoader(mRenderer);
 
-      FileManagerPanel::Initialize(mRenderer, mCommands, mDescriptors);
+      FileManagerPanel::Initialize(mRenderer, mCommands, mDescriptors, mSwapchain);
     }
 
     void render() {
