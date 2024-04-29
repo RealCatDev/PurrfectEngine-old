@@ -17,9 +17,29 @@ namespace PurrfectEngine {
     std::map<K, V> data_;
 
   public:
-    void insert(const K& key, const V& value) {
+    void set(const K& key, const V& value) {
       data_[key] = value;
     }
+
+    void erase(const K& key) {
+        data_.erase(key);
+    }
+
+    template <typename Func>
+    void forEach(Func&& fn) const {
+        for (const auto& [key, value] : data_) {
+            fn(value, key, *this);
+        }
+    }
+
+    V get(const K& key) const {
+        auto it = data_.find(key);
+        if (it != data_.end()) {
+            return it->second;
+        }
+        throw std::out_of_range("Key not found in collection");
+    }
+
 
     // Ensure that the key exists with the specified value
     void ensure(const std::string& key, const std::string& value) {
@@ -339,6 +359,316 @@ namespace PurrfectEngine {
 
         return std::make_pair(passing, failing);
     }
+
+    template <typename T>
+    Collection<K, T> flatMap(std::function<Collection<K, T>(V, K, Collection<K, V>&)> fn) const {
+        Collection<K, T> result;
+        for (const auto& [key, value] : data_) {
+            Collection<K, T> mapped = fn(value, key, *this);
+            for (const auto& [mappedKey, mappedValue] : mapped) {
+                result.insert(mappedKey, mappedValue);
+            }
+        }
+        return result;
+    }
+
+    template <typename T, typename This>
+    Collection<K, T> flatMap(std::function<Collection<K, T>(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        Collection<K, T> result;
+        for (const auto& [key, value] : data_) {
+            Collection<K, T> mapped = fn(thisArg, value, key, *this);
+            for (const auto& [mappedKey, mappedValue] : mapped) {
+                result.insert(mappedKey, mappedValue);
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    std::vector<T> map(std::function<T(V, K, Collection<K, V>&)> fn) const {
+        std::vector<T> result;
+        for (const auto& [key, value] : data_) {
+            result.push_back(fn(value, key, *this));
+        }
+        return result;
+    }
+
+    template <typename T, typename This>
+    std::vector<T> map(std::function<T(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        std::vector<T> result;
+        for (const auto& [key, value] : data_) {
+            result.push_back(fn(thisArg, value, key, *this));
+        }
+        return result;
+    }
+
+    template <typename T>
+    Collection<K, T> mapValues(std::function<T(V, K, Collection<K, V>&)> fn) const {
+        Collection<K, T> result;
+        for (const auto& [key, value] : data_) {
+            result.insert(key, fn(value, key, *this));
+        }
+        return result;
+    }
+
+    template <typename T, typename This>
+    Collection<K, T> mapValues(std::function<T(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        Collection<K, T> result;
+        for (const auto& [key, value] : data_) {
+            result.insert(key, fn(thisArg, value, key, *this));
+        }
+        return result;
+    }
+
+    bool some(std::function<bool(V, K, Collection<K, V>&)> fn) const {
+        for (const auto& [key, value] : data_) {
+            if (fn(value, key, *this)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template <typename T>
+    bool some(std::function<bool(T, V, K, Collection<K, V>&)> fn, T thisArg) const {
+        for (const auto& [key, value] : data_) {
+            if (fn(thisArg, value, key, *this)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template <typename K2>
+    bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename V2>
+    bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename This, typename K2>
+    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(thisArg, value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename This, typename V2>
+    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(thisArg, value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename This>
+    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
+        for (const auto& [key, value] : data_) {
+            if (!fn(thisArg, value, key, *this)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename T = V>
+    T reduce(std::function<T(T, V, K, Collection<K, V>&)> fn, T initialValue = {}) const {
+        T accumulator = initialValue;
+        for (const auto& [key, value] : data_) {
+            accumulator = fn(accumulator, value, key, *this);
+        }
+        return accumulator;
+    }
+
+    template <typename T = void>
+    Collection<K, V>& each(std::function<void(V, K, Collection<K, V>&)> fn) {
+        for (auto& [key, value] : data_) {
+            fn(value, key, *this);
+        }
+        return *this;
+    }
+
+    template <typename T>
+    Collection<K, V>& each(std::function<void(T, V, K, Collection<K, V>&)> fn, T thisArg) {
+        for (auto& [key, value] : data_) {
+            fn(thisArg, value, key, *this);
+        }
+        return *this;
+    }
+
+    template <typename T = void>
+    Collection<K, V>& tap(std::function<void(Collection<K, V>&)> fn) {
+        fn(*this);
+        return *this;
+    }
+
+    template <typename T>
+    Collection<K, V>& tap(std::function<void(T, Collection<K, V>&)> fn, T thisArg) {
+        fn(thisArg, *this);
+        return *this;
+    }
+
+    Collection<K, V> clone() const {
+        Collection<K, V> clonedCollection;
+        for (const auto& [key, value] : data_) {
+            clonedCollection.insert(key, value);
+        }
+        return clonedCollection;
+    }
+
+    Collection<K, V> concat(const std::vector<Collection<K, V>>& collections) const {
+        Collection<K, V> result = *this;
+        for (const auto& collection : collections) {
+            for (const auto& [key, value] : collection) {
+                result.insert(key, value);
+            }
+        }
+        return result;
+    }
+
+    bool equals(const Collection<K, V>& other) const {
+        if (data_.size() != other.data_.size()) {
+            return false;
+        }
+        for (const auto& [key, value] : data_) {
+            auto it = other.data_.find(key);
+            if (it == other.data_.end() || it->second != value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    Collection<K, V>& sort(std::function<bool(const std::pair<K, V>&, const std::pair<K, V>&)> compareFunction) {
+        std::vector<std::pair<K, V>> temp(data_.begin(), data_.end());
+        std::sort(temp.begin(), temp.end(), compareFunction);
+        data_ = std::map<K, V>(temp.begin(), temp.end());
+        return *this;
+    }
+
+    template <typename T>
+    Collection<K, T> intersect(const Collection<K, T>& other) const {
+        Collection<K, T> result;
+        for (const auto& [key, value] : data_) {
+            if (other.data_.count(key)) {
+                result.insert(key, other.data_.at(key));
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    Collection<K, V> subtract(const Collection<K, T>& other) const {
+        Collection<K, V> result;
+        for (const auto& [key, value] : data_) {
+            if (!other.data_.count(key)) {
+                result.insert(key, value);
+            }
+        }
+        return result;
+    }
+
+    template <typename T>
+    Collection<K, T | V> difference(const Collection<K, T>& other) const {
+        Collection<K, T | V> result;
+        for (const auto& [key, value] : data_) {
+            if (!other.data_.count(key)) {
+                result.insert(key, value);
+            }
+        }
+        for (const auto& [key, value] : other.data_) {
+            if (!data_.count(key)) {
+                result.insert(key, value);
+            }
+        }
+        return result;
+    }
+
+    template <typename T, typename R>
+    Collection<K, R> merge(
+        const Collection<K, T>& other,
+        std::function<Keep<R>(V, K)> whenInSelf,
+        std::function<Keep<R>(T, K)> whenInOther,
+        std::function<Keep<R>(V, T, K)> whenInBoth
+    ) const {
+        Collection<K, R> result;
+        for (const auto& [key, value] : data_) {
+            if (other.data_.count(key)) {
+                result.insert(key, whenInBoth(value, other.data_.at(key), key));
+            } else {
+                result.insert(key, whenInSelf(value, key));
+            }
+        }
+        for (const auto& [key, value] : other.data_) {
+            if (!data_.count(key)) {
+                result.insert(key, whenInOther(value, key));
+            }
+        }
+        return result;
+    }
+
+    Collection<K, V>& sorted(std::function<bool(const std::pair<K, V>&, const std::pair<K, V>&)> compareFunction) {
+        std::vector<std::pair<K, V>> temp(data_.begin(), data_.end());
+        std::sort(temp.begin(), temp.end(), compareFunction);
+        data_ = std::map<K, V>(temp.begin(), temp.end());
+        return *this;
+    }
+
+    std::vector<V> toJSON() const {
+        std::vector<V> result;
+        for (const auto& [key, value] : data_) {
+            result.push_back(value);
+        }
+        return result;
+    }
+
+    template <typename K, typename V>
+    class Collection {
+    public:
+        static Collection<K, V> combineEntries(
+            const std::vector<std::pair<K, V>>& entries,
+            std::function<V(V, V, K)> combine
+        ) {
+            Collection<K, V> result;
+            for (const auto& [key, value] : entries) {
+                if (result.data_.count(key)) {
+                    result.data_[key] = combine(result.data_[key], value, key);
+                } else {
+                    result.data_[key] = value;
+                }
+            }
+            return result;
+        }
+    };
+
+
   };
 }
 

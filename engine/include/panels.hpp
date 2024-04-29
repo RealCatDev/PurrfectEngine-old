@@ -37,8 +37,6 @@ namespace PurrfectEngine {
     static void Initialize(vkRenderer *renderer, vkCommandPool *commandPool, vkDescriptorPool *descriptorPool, vkSwapchain *swapChain) {
       sTexture = new vkTexture(renderer, Asset("textures/texture.png"));
       sTexture->initialize(commandPool, descriptorPool, swapChain->getFormat(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-      sCollection = new Collection();
-      sCollection->
     }
     
     static void Cleanup() {
