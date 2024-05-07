@@ -22,14 +22,34 @@ namespace PurrfectEngine {
   // MARK: Hierarchy
   class HierarchyPanel {
   public:
-    static void Render() {
-      ImGui::Begin("Hierarchy", &mOpen);
-      // Render your hierarchy here
-      ImGui::End();
-    }
+      static void Render(purrScene& scene) {
+          ImGui::Begin("Hierarchy");
+          RenderScene(scene);
+          ImGui::End();
+      }
+
   private:
-    inline static bool mOpen = true;
+      static void RenderScene(purrScene& scene) {
+          for (auto& obj : scene.getObjects()) {
+              RenderGameObject(*obj);
+          }
+      }
+
+      static void RenderGameObject(purrObject& gameObject) {
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+        bool nodeOpen = ImGui::TreeNodeEx(gameObject.getName().c_str(), flags);
+
+        if (nodeOpen) {
+            for (auto& child : gameObject.getChildren()) {
+                RenderGameObject(*child);
+            }
+            ImGui::TreePop();
+        }
+    }
+
   };
+
+
 
   // MARK: FileView
   class FileManagerPanel {
@@ -118,7 +138,7 @@ namespace PurrfectEngine {
     inline static FileNode mRootNode; // Virtual root node for folder tree
     inline static bool mOpen = true;
 
-    inline static Collection *sCollection = nullptr;
+    inline static Collection<int, std::string> *sCollection = nullptr;
     inline static vkTexture *sTexture = nullptr;
   };
 }

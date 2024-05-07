@@ -14,7 +14,7 @@ namespace PurrfectEngine {
       for (auto obj : mObjects) delete obj;
     }
 
-    std::vector<purrObject*> getObjects() const { return mObjects; }
+    const std::vector<purrObject*>& getObjects() const { return mObjects; }
 
     void addObject(purrObject *object) {
       mObjects.push_back(object);
@@ -22,11 +22,12 @@ namespace PurrfectEngine {
 
     void removeObject(UUID *uuid) {
       auto it = std::find_if(mObjects.begin(), mObjects.end(), [uuid](purrObject *obj) 
-        { return obj->getUuid() == uuid; });
+      { return obj->getUuid() == uuid; });
       if (it == mObjects.end()) return;
+      delete *it;
       mObjects.erase(it);
-      delete mObjects.at(mObjects.end() - it);
     }
+
 
     purrObject *getObject(UUID *uuid) {
       purrObject *obj = nullptr;

@@ -7,6 +7,7 @@
 #include <random>
 #include <stdexcept>
 #include <algorithm>
+#include <variant>
 
 
 namespace PurrfectEngine {
@@ -439,7 +440,7 @@ namespace PurrfectEngine {
         return false;
     }
 
-    template <typename K2>
+    template <>
     bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
         for (const auto& [key, value] : data_) {
             if (!fn(value, key, *this)) {
@@ -449,54 +450,7 @@ namespace PurrfectEngine {
         return true;
     }
 
-    template <typename V2>
-    bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
-        for (const auto& [key, value] : data_) {
-            if (!fn(value, key, *this)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    bool every(std::function<bool(V, K, Collection<K, V>&)> fn) const {
-        for (const auto& [key, value] : data_) {
-            if (!fn(value, key, *this)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    template <typename This, typename K2>
-    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
-        for (const auto& [key, value] : data_) {
-            if (!fn(thisArg, value, key, *this)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    template <typename This, typename V2>
-    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
-        for (const auto& [key, value] : data_) {
-            if (!fn(thisArg, value, key, *this)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    template <typename This>
-    bool every(std::function<bool(This, V, K, Collection<K, V>&)> fn, This thisArg) const {
-        for (const auto& [key, value] : data_) {
-            if (!fn(thisArg, value, key, *this)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     template <typename T = V>
     T reduce(std::function<T(T, V, K, Collection<K, V>&)> fn, T initialValue = {}) const {
@@ -595,9 +549,11 @@ namespace PurrfectEngine {
         return result;
     }
 
+    
+
     template <typename T>
-    Collection<K, T | V> difference(const Collection<K, T>& other) const {
-        Collection<K, T | V> result;
+    Collection<K, std::variant<T, V>> difference(const Collection<K, T>& other) const {
+        Collection<K, std::variant<T, V>> result;
         for (const auto& [key, value] : data_) {
             if (!other.data_.count(key)) {
                 result.insert(key, value);
@@ -611,12 +567,13 @@ namespace PurrfectEngine {
         return result;
     }
 
+
     template <typename T, typename R>
     Collection<K, R> merge(
         const Collection<K, T>& other,
-        std::function<Keep<R>(V, K)> whenInSelf,
-        std::function<Keep<R>(T, K)> whenInOther,
-        std::function<Keep<R>(V, T, K)> whenInBoth
+        std::function<R(V, K)> whenInSelf,
+        std::function<R(T, K)> whenInOther,
+        std::function<R(V, T, K)> whenInBoth
     ) const {
         Collection<K, R> result;
         for (const auto& [key, value] : data_) {
@@ -634,6 +591,7 @@ namespace PurrfectEngine {
         return result;
     }
 
+
     Collection<K, V>& sorted(std::function<bool(const std::pair<K, V>&, const std::pair<K, V>&)> compareFunction) {
         std::vector<std::pair<K, V>> temp(data_.begin(), data_.end());
         std::sort(temp.begin(), temp.end(), compareFunction);
@@ -648,11 +606,7 @@ namespace PurrfectEngine {
         }
         return result;
     }
-
-    template <typename K, typename V>
-    class Collection {
-    public:
-        static Collection<K, V> combineEntries(
+    static Collection<K, V> combineEntries(
             const std::vector<std::pair<K, V>>& entries,
             std::function<V(V, V, K)> combine
         ) {
@@ -666,9 +620,6 @@ namespace PurrfectEngine {
             }
             return result;
         }
-    };
-
-
   };
 }
 

@@ -577,7 +577,7 @@ namespace PurrfectEngine {
       FileManagerPanel::Refresh();
       FileManagerPanel::Render();
 
-      HierarchyPanel::Render();
+      HierarchyPanel::Render(*mScene);
 
       ImGui::End(); // Dockspace
     }
