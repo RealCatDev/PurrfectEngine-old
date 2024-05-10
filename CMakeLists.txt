@@ -25,6 +25,7 @@ add_subdirectory(deps/spdlog)
 add_subdirectory(deps/glm)
 add_subdirectory(deps/imguizmo)
 add_subdirectory(deps/freetype)
+add_subdirectory(deps/discord-rpc)
 
 set(ASSIMP_BUILD_STATIC_LIB ON)
 add_subdirectory(deps/assimp)
@@ -35,8 +36,8 @@ get_target_property(FREETYPE_INCLUDE_DIRS freetype INTERFACE_INCLUDE_DIRECTORIES
 set(GLM_DIR deps/glm/)
 
 set(IMGUI_DIR "../deps/imgui/")
-set(DEFAULT_INCLUDES "../deps/stb/" "../deps/assimp/include/" "../deps/assimp/build/include/" ${IMGUI_DIR} ${SPDLOG_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_DIR} ${Vulkan_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
-set(DEFAULT_LIBS spdlog glfw glm Vulkan::Vulkan ImGuizmo assimp)
+set(DEFAULT_INCLUDES "../deps/stb/" "../deps/assimp/include/" "../deps/assimp/build/include/" "../deps/discord-rpc/include" ${IMGUI_DIR} ${SPDLOG_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_DIR} ${Vulkan_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+set(DEFAULT_LIBS spdlog glfw glm Vulkan::Vulkan ImGuizmo assimp discord-rpc)
 
 set(IMGUI_FILES ${IMGUI_DIR}backends/imgui_impl_glfw.cpp ${IMGUI_DIR}backends/imgui_impl_vulkan.cpp ${IMGUI_DIR}imgui.cpp ${IMGUI_DIR}imgui_draw.cpp ${IMGUI_DIR}imgui_demo.cpp ${IMGUI_DIR}imgui_tables.cpp ${IMGUI_DIR}imgui_widgets.cpp)
 

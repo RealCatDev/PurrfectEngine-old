@@ -4,6 +4,7 @@
 
 #include <PurrfectEngine/window.hpp>
 #include <PurrfectEngine/application.hpp>
+#include <PurrfectEngine/discord.hpp>
 
 int main (int argc, char **argv) {
   PurrfectEngine::application *app = new PurrfectEngine::application();
@@ -12,10 +13,11 @@ int main (int argc, char **argv) {
   std::string assetDir = std::string(app->getProjDir()) + "assets/";
   app->setAssetDir(assetDir.c_str());
   
-
+  PurrfectEngine::discord  *discord  = new PurrfectEngine::discord(1238329177485082744);
   PurrfectEngine::window   *window   = new PurrfectEngine::window("PurrfectEngine", 1920, 1070);
   PurrfectEngine::renderer *renderer = new PurrfectEngine::renderer(window);
   renderer->initialize();
+  discord->SetRichPresence("Playing stuff", )
 
   
 
